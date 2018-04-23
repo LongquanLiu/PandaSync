@@ -25,6 +25,13 @@
 #include "rounding.h"
 #include "inums.h"
 #include "io.h"
+extern int stdout_format_has_i;
+extern int logfile_format_has_i;
+extern int log_before_transfer;
+extern int batch_fd;
+extern int write_batch;
+extern int make_backups;
+BOOL extra_flist_sending_enabled;
 
 extern int am_root;
 extern int am_server;
@@ -2477,7 +2484,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	} else
 		dir_flist = cur_flist;
 
-	disable_buffering = io_start_buffering_out(f);
+	disable_buffering = io_start_buffering_out(f2);
 	// f is the file description of f_out
 	if (filesfrom_fd >= 0) {
 		if (argv[0] && !change_dir(argv[0], CD_NORMAL)) {
@@ -2624,7 +2631,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 
 		if (implied_dot_dir < 0) {
 			implied_dot_dir = 1;
-			send_file_name(f, flist, ".", NULL, (flags | FLAG_IMPLIED_DIR) & ~FLAG_CONTENT_DIR, ALL_FILTERS);
+			send_file_name(f2, flist, ".", NULL, (flags | FLAG_IMPLIED_DIR) & ~FLAG_CONTENT_DIR, ALL_FILTERS);
 		}
 
 		if (fn != fbuf)
@@ -2668,7 +2675,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 						p = fn;
 				} else
 					fn = p;
-				send_implied_dirs(f, flist, fbuf, fbuf, p, flags,
+				send_implied_dirs(f2, flist, fbuf, fbuf, p, flags,
 								  IS_MISSING_FILE(st) ? MISSING_NAME : name_type);
 				if (fn == p)
 					continue;
@@ -2676,7 +2683,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 		} else if (implied_dirs && (p=strrchr(fbuf,'/')) && p != fbuf) {
 			/* Send the implied directories at the start of the
 			 * source spec, so we get their permissions right. */
-			send_implied_dirs(f, flist, fbuf, fbuf, p, flags, 0);
+			send_implied_dirs(f2, flist, fbuf, fbuf, p, flags, 0);
 		}
 
 		if (one_file_system)
@@ -2684,7 +2691,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 
 		if (recurse || (xfer_dirs && name_type != NORMAL_NAME)) {
 
-			file = send_file_name(f, flist, fbuf, &st,
+			file = send_file_name(f2, flist, fbuf, &st,
 								  FLAG_TOP_DIR | FLAG_CONTENT_DIR | flags,
 								  NO_FILTERS);
 			if (!file)
@@ -2695,12 +2702,12 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 						send_dir_depth = 0;
 						change_local_filter_dir(fbuf, len, send_dir_depth);
 					}
-					send_directory(f, flist, fbuf, len, flags);
+					send_directory(f2, flist, fbuf, len, flags);
 				}
 			} else
-				send_if_directory(f, flist, file, fbuf, len, flags);
+				send_if_directory(f2, flist, file, fbuf, len, flags);
 		} else
-			send_file_name(f, flist, fbuf, &st, flags, NO_FILTERS);
+			send_file_name(f2, flist, fbuf, &st, flags, NO_FILTERS);
 	}
 
 	if (reenable_multiplex >= 0)
@@ -2715,14 +2722,14 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 
 	/* Indicate end of file list */
 	if (io_error == 0 || ignore_errors)
-		write_byte(f, 0);
+		write_byte(f2, 0);
 	else if (use_safe_inc_flist) {
-		write_shortint(f, XMIT_EXTENDED_FLAGS|XMIT_IO_ERROR_ENDLIST);
-		write_varint(f, io_error);
+		write_shortint(f2, XMIT_EXTENDED_FLAGS|XMIT_IO_ERROR_ENDLIST);
+		write_varint(f2, io_error);
 	} else {
 		if (delete_during && inc_recurse)
 			fatal_unsafe_io_error();
-		write_byte(f, 0);
+		write_byte(f2, 0);
 	}
 
 #ifdef SUPPORT_HARD_LINKS
@@ -2758,11 +2765,11 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	file_old_total += flist->used;
 
 	if (numeric_ids <= 0 && !inc_recurse)
-		send_id_list(f);
+		send_id_list(f2);
 
 	/* send the io_error flag */
 	if (protocol_version < 30)
-		write_int(f, ignore_errors ? 0 : io_error);
+		write_int(f2, ignore_errors ? 0 : io_error);
 	else if (!use_safe_inc_flist && io_error && !ignore_errors)
 		send_msg_int(MSG_IO_ERROR, io_error);
 
@@ -2785,7 +2792,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 			flist->parent_ndx = -1;
 		flist_done_allocating(flist);
 		if (send_dir_ndx < 0) {
-			write_ndx(f, NDX_FLIST_EOF);
+			write_ndx(f2, NDX_FLIST_EOF);
 			flist_eof = 1;
 			if (DEBUG_GTE(FLIST, 3))
 				rprintf(FINFO, "[%s] flist_eof=1\n", who_am_i());
@@ -2794,7 +2801,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 			/* If we're creating incremental file-lists and there
 			 * was just 1 item in the first file-list, send 1 more
 			 * file-list to check if this is a 1-file xfer. */
-			send_extra_file_list(f, 1);
+			send_extra_file_list(f2, 1);
 		}
 	} else {
 		flist_eof = 1;
@@ -2808,7 +2815,6 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	struct sum_struct *s;
 	s->count = 0;
 	struct map_struct *mbuf = NULL;
-	STRUCT_STAT st;
 	char fname[MAXPATHLEN], xname[MAXPATHLEN];
 	const char *path, *slash;
 	uchar fnamecmp_type;
@@ -2816,7 +2822,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	int phase = 0, max_phase = protocol_version >= 29 ? 2 : 1;
 	int itemizing = am_server ? logfile_format_has_i : stdout_format_has_i;
 	enum logcode log_code = log_before_transfer ? FLOG : FINFO;
-	int f_xfer = write_batch < 0 ? batch_fd : f_out;
+	int f_xfer = write_batch < 0 ? batch_fd : f2;
 	int save_io_error = io_error;
 	int ndx, j;
 
@@ -2825,12 +2831,12 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 
 	while (1) {
 		if (inc_recurse) {
-			send_extra_file_list(f_out, MIN_FILECNT_LOOKAHEAD);
+			send_extra_file_list(f2, MIN_FILECNT_LOOKAHEAD);
 			extra_flist_sending_enabled = !flist_eof;
 		}
 
 		if (inc_recurse)
-			send_extra_file_list(f_out, MIN_FILECNT_LOOKAHEAD);
+			send_extra_file_list(f2, MIN_FILECNT_LOOKAHEAD);
 
 		f_name(file, fname);
 
