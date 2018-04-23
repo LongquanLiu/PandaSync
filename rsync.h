@@ -18,6 +18,8 @@
  * with this program; if not, visit the http://fsf.org website.
  */
 
+
+
 #define False 0
 #define True 1
 
@@ -333,7 +335,10 @@ enum delret {
 #ifdef TIME_WITH_SYS_TIME
 #include <sys/time.h>
 #include <time.h>
+static clock_t start1, finish;
+struct timeval start, end;
 #else
+
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
 #else

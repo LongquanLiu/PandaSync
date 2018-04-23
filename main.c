@@ -95,6 +95,7 @@ extern char *basis_dir[MAX_BASIS_DIRS+1];
 extern struct file_list *first_flist;
 extern filter_rule_list daemon_filter_list;
 
+
 uid_t our_uid;
 gid_t our_gid;
 int am_receiver = 0;  /* Only set to 1 after the receiver/generator fork. */
@@ -123,8 +124,12 @@ struct pid_status {
 	int status;
 } pid_stat_table[MAXCHILDPROCS];
 
-static time_t starttime, endtime;
+
 static int64 total_read, total_written;
+static time_t starttime, endtime; 
+
+
+
 
 static void show_malloc_stats(void);
 
@@ -354,6 +359,7 @@ static void output_summary(void)
 			human_num(stats.total_size),
 			comma_dnum((double)stats.total_size / (total_written+total_read), 2),
 			write_batch < 0 ? " (BATCH ONLY)" : dry_run ? " (DRY RUN)" : "");
+		
 	}
 
 	fflush(stdout);
@@ -1038,6 +1044,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
 		rprintf(FERROR,"server_recv: recv_file_list error\n");
 		exit_cleanup(RERR_FILESELECT);
 	}
+	
 	if (inc_recurse && file_total == 1)
 		recv_additional_file_list(f_in);
 
@@ -1132,7 +1139,8 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 
 	io_set_sock_fds(f_in, f_out);
 	setup_protocol(f_out,f_in);
-
+	
+	
 	/* We set our stderr file handle to blocking because ssh might have
 	 * set it to non-blocking.  This can be particularly troublesome if
 	 * stderr is a clone of stdout, because ssh would have set our stdout
@@ -1165,28 +1173,86 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 
 		if (write_batch && !am_server)
 			start_write_batch(f_out);
-		flist = send_file_list(f_out, argc, argv);
-		if (DEBUG_GTE(FLIST, 3))
-			rprintf(FINFO,"file list sent\n");
 
-		if (protocol_version < 31 && filesfrom_host && protocol_version >= 23)
-			io_start_multiplex_in(f_in);
+		if(whole_file == 1){
+			flist = send_file_list_and_file(f_in, f_out, argc, argv);
 
-		io_flush(NORMAL_FLUSH);
-		send_files(f_in, f_out);
-		io_flush(FULL_FLUSH);
-		handle_stats(-1);
-		if (protocol_version >= 24)
-			read_final_goodbye(f_in, f_out);
-		if (pid != -1) {
-			if (DEBUG_GTE(EXIT, 2))
-				rprintf(FINFO,"client_run waiting on %d\n", (int) pid);
+			if (DEBUG_GTE(FLIST, 3))
+				rprintf(FINFO,"file list sent\n");
+
+			if (protocol_version < 31 && filesfrom_host && protocol_version >= 23)
+				io_start_multiplex_in(f_in);
+
+			io_flush(NORMAL_FLUSH);
+			gettimeofday(&end, NULL);
+			printf("finish_filelist time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+			finish = clock();
+			printf("finish_filelist CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+
+			gettimeofday(&end, NULL);
+			printf("finish send_files(third) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+			finish = clock();
+			printf("finish send_files(third) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+			handle_stats(-1);
+			if (protocol_version >= 24)
+				read_final_goodbye(f_in, f_out);
+			if (pid != -1) {
+				if (DEBUG_GTE(EXIT, 2))
+					rprintf(FINFO,"client_run waiting on %d\n", (int) pid);
+				io_flush(FULL_FLUSH);
+				wait_process_with_flush(pid, &exit_code);
+			}
+			output_summary();
 			io_flush(FULL_FLUSH);
-			wait_process_with_flush(pid, &exit_code);
+			gettimeofday(&end, NULL);
+			printf("finish time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+			finish = clock();
+			printf("finish CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+			exit_cleanup(exit_code);
+
+		}else{
+			gettimeofday(&end, NULL);
+			printf("before send_file_list(first) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+			finish = clock();
+			printf( "before send_file_list(first) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+
+			flist = send_file_list(f_out, argc, argv);
+			if (DEBUG_GTE(FLIST, 3))
+				rprintf(FINFO,"file list sent\n");
+
+			if (protocol_version < 31 && filesfrom_host && protocol_version >= 23)
+				io_start_multiplex_in(f_in);
+
+			io_flush(NORMAL_FLUSH);
+			gettimeofday(&end, NULL);
+			printf("finish_filelist time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+			finish = clock();
+			printf("finish_filelist CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+
+			send_files(f_in, f_out);
+			io_flush(FULL_FLUSH);
+
+			gettimeofday(&end, NULL);
+			printf("finish send_files(third) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+			finish = clock();
+			printf("finish send_files(third) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+			handle_stats(-1);
+			if (protocol_version >= 24)
+				read_final_goodbye(f_in, f_out);
+			if (pid != -1) {
+				if (DEBUG_GTE(EXIT, 2))
+					rprintf(FINFO,"client_run waiting on %d\n", (int) pid);
+				io_flush(FULL_FLUSH);
+				wait_process_with_flush(pid, &exit_code);
+			}
+			output_summary();
+			io_flush(FULL_FLUSH);
+			gettimeofday(&end, NULL);
+			printf("finish time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+			finish = clock();
+			printf("finish CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+			exit_cleanup(exit_code);
 		}
-		output_summary();
-		io_flush(FULL_FLUSH);
-		exit_cleanup(exit_code);
 	}
 
 	if (!read_batch) {
@@ -1256,6 +1322,10 @@ static int copy_argv(char *argv[])
  * client_run (for ssh). */
 static int start_client(int argc, char *argv[])
 {
+	gettimeofday(&end, NULL);
+	printf("before start_client time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
+	finish = clock(); 
+	printf("before start_client CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
 	char *p, *shell_machine = NULL, *shell_user = NULL;
 	char **remote_argv;
 	int remote_argc;
@@ -1267,7 +1337,7 @@ static int start_client(int argc, char *argv[])
 	 * command line. */
 	if ((ret = copy_argv(argv)) != 0)
 		return ret;
-
+	
 	if (!read_batch) { /* for read_batch, NO source is specified */
 		char *path = check_for_hostspec(argv[0], &shell_machine, &rsync_port);
 		if (path) { /* source is remote */
@@ -1425,12 +1495,12 @@ static int start_client(int argc, char *argv[])
 		if (tmpret < 0)
 			return tmpret;
 	}
-
+	
 	ret = client_run(f_in, f_out, pid, argc, argv);
-
+	
 	fflush(stdout);
 	fflush(stderr);
-
+	
 	return ret;
 }
 
@@ -1529,6 +1599,11 @@ static void rsync_panic_handler(UNUSED(int whatsig))
 
 int main(int argc,char *argv[])
 {
+	printf( "Now start : init start time \n"); 
+	/* 测量一个事件持续的时间*/ 
+	gettimeofday(&start, NULL);
+	start1 = clock(); 
+
 	int ret;
 	int orig_argc = argc;
 	char **orig_argv = argv;
@@ -1549,14 +1624,14 @@ int main(int argc,char *argv[])
 	SIGACTMASK(SIGABRT, rsync_panic_handler);
 	SIGACTMASK(SIGBUS, rsync_panic_handler);
 #endif
+	 
 
-	starttime = time(NULL);
+	
 	our_uid = MY_UID();
 	our_gid = MY_GID();
 	am_root = our_uid == 0;
 
 	memset(&stats, 0, sizeof(stats));
-
 	if (argc < 2) {
 		usage(FERROR);
 		exit_cleanup(RERR_SYNTAX);
@@ -1651,12 +1726,14 @@ int main(int argc,char *argv[])
 			return start_daemon(STDIN_FILENO, STDOUT_FILENO);
 		start_server(STDIN_FILENO, STDOUT_FILENO, argc, argv);
 	}
-
+	
 	ret = start_client(argc, argv);
+	
 	if (ret == -1)
 		exit_cleanup(RERR_STARTCLIENT);
 	else
 		exit_cleanup(ret);
-
+	
 	return ret;
+	 
 }
