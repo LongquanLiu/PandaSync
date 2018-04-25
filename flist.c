@@ -32,6 +32,31 @@ extern int batch_fd;
 extern int write_batch;
 extern int make_backups;
 BOOL extra_flist_sending_enabled;
+extern char *basis_dir[MAX_BASIS_DIRS+1];
+extern int curr_dir_depth;
+extern char *partial_dir;
+extern unsigned int module_dirlen;
+extern char *backup_dir;
+extern int backup_dir_len;
+extern char backup_dir_buf[MAXPATHLEN];
+extern int send_msgs_to_gen;
+extern int sock_f_out;
+extern size_t bwlimit_writemax;
+extern int read_batch;
+extern int delay_updates;
+extern int basis_dir_cnt;
+static struct bitbag *delayed_bits = NULL;
+extern int inplace;
+extern int preserve_perms;
+extern int keep_partial;
+extern int remove_source_files;
+static flist_ndx_list batch_redo_list;
+/* We're either updating the basis file or an identical copy: */
+static int updating_basis_or_equiv;
+
+extern int am_receiver;  /* Only set to 1 after the receiver/generator fork. */
+extern int phase;
+extern int redoing ;
 
 extern int am_root;
 extern int am_server;
@@ -2916,6 +2941,585 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	return flist;
 }
 
+struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[])
+{
+    /* part 1 recv file list */
+    const char *good_dirname = NULL;
+    struct file_list *flist;
+    int dstart, flags;
+    int64 start_read;
+    struct file_struct *file;
+    if (!first_flist) {
+        if (show_filelist_progress)
+            start_filelist_progress("receiving file list");
+        else if (inc_recurse && INFO_GTE(FLIST, 1) && !am_server)
+            rprintf(FCLIENT, "receiving incremental file list\n");
+        rprintf(FLOG, "receiving file list\n");
+        if (usermap)
+            parse_name_map(usermap, True);
+        if (groupmap)
+            parse_name_map(groupmap, False);
+    }
+
+    start_read = stats.total_read;
+
+#ifdef SUPPORT_HARD_LINKS
+    if (preserve_hard_links && !first_flist)
+        init_hard_links();
+#endif
+
+    flist = flist_new(0, "recv_file_list");
+
+    if (inc_recurse) {
+        if (flist->ndx_start == 1)
+            dir_flist = flist_new(FLIST_TEMP, "recv_file_list");
+        dstart = dir_flist->used;
+    } else {
+        dir_flist = flist;
+        dstart = 0;
+    }
+
+    while ((flags = read_byte(f1)) != 0) {
+
+
+        if (protocol_version >= 28 && (flags & XMIT_EXTENDED_FLAGS))
+            flags |= read_byte(f1) << 8;
+
+        if (flags == (XMIT_EXTENDED_FLAGS|XMIT_IO_ERROR_ENDLIST)) {
+            int err;
+            if (!use_safe_inc_flist) {
+                rprintf(FERROR, "Invalid flist flag: %x\n", flags);
+                exit_cleanup(RERR_PROTOCOL);
+            }
+            err = read_varint(f1);
+            if (!ignore_errors)
+                io_error |= err;
+            break;
+        }
+
+        flist_expand(flist, 1);
+        file = recv_file_entry(f1, flist, flags);
+
+        if (inc_recurse) {
+            static const char empty_dir[] = "\0";
+            const char *cur_dir = file->dirname ? file->dirname : empty_dir;
+            if (relative_paths && *cur_dir == '/')
+                cur_dir++;
+            if (cur_dir != good_dirname) {
+                const char *d = dir_ndx >= 0 ? f_name(dir_flist->files[dir_ndx], NULL) : empty_dir;
+                if (strcmp(cur_dir, d) != 0) {
+                    rprintf(FERROR,
+                            "ABORTING due to invalid path from sender: %s/%s\n",
+                            cur_dir, file->basename);
+                    exit_cleanup(RERR_PROTOCOL);
+                }
+                good_dirname = cur_dir;
+            }
+        }
+
+        if (S_ISREG(file->mode)) {
+            /* Already counted */
+        } else if (S_ISDIR(file->mode)) {
+            if (inc_recurse) {
+                flist_expand(dir_flist, 1);
+                dir_flist->files[dir_flist->used++] = file;
+            }
+            stats.num_dirs++;
+        } else if (S_ISLNK(file->mode))
+            stats.num_symlinks++;
+        else if (IS_DEVICE(file->mode))
+            stats.num_symlinks++;
+        else
+            stats.num_specials++;
+
+        flist->files[flist->used++] = file;
+
+        maybe_emit_filelist_progress(flist->used);
+
+        if (DEBUG_GTE(FLIST, 2)) {
+            char *name = f_name(file, NULL);
+            rprintf(FINFO, "recv_file_name(%s)\n", NS(name));
+        }
+    }
+    file_total += flist->used;
+
+    if (DEBUG_GTE(FLIST, 2))
+        rprintf(FINFO, "received %d names\n", flist->used);
+
+    if (show_filelist_progress)
+        finish_filelist_progress(flist);
+
+    if (need_unsorted_flist) {
+        /* Create an extra array of index pointers that we can sort for
+         * the generator's use (for wading through the files in sorted
+         * order and for calling flist_find()).  We keep the "files"
+         * list unsorted for our exchange of index numbers with the
+         * other side (since their names may not sort the same). */
+        if (!(flist->sorted = new_array(struct file_struct *, flist->used)))
+            out_of_memory("recv_file_list");
+        memcpy(flist->sorted, flist->files,
+               flist->used * sizeof (struct file_struct*));
+        if (inc_recurse && dir_flist->used > dstart) {
+            static int dir_flist_malloced = 0;
+            if (dir_flist_malloced < dir_flist->malloced) {
+                dir_flist->sorted = realloc_array(dir_flist->sorted,
+                                                  struct file_struct *,
+                                                  dir_flist->malloced);
+                dir_flist_malloced = dir_flist->malloced;
+            }
+            memcpy(dir_flist->sorted + dstart, dir_flist->files + dstart,
+                   (dir_flist->used - dstart) * sizeof (struct file_struct*));
+            fsort(dir_flist->sorted + dstart, dir_flist->used - dstart);
+        }
+    } else {
+        flist->sorted = flist->files;
+        if (inc_recurse && dir_flist->used > dstart) {
+            dir_flist->sorted = dir_flist->files;
+            fsort(dir_flist->sorted + dstart, dir_flist->used - dstart);
+        }
+    }
+
+    if (inc_recurse)
+        flist_done_allocating(flist);
+    else if (f1 >= 0) {
+        recv_id_list(f1, flist);
+        flist_eof = 1;
+        if (DEBUG_GTE(FLIST, 3))
+            rprintf(FINFO, "[%s] flist_eof=1\n", who_am_i());
+    }
+
+    /* The --relative option sends paths with a leading slash, so we need
+     * to specify the strip_root option here.  We rejected leading slashes
+     * for a non-relative transfer in recv_file_entry(). */
+    flist_sort_and_clean(flist, relative_paths);
+
+    if (protocol_version < 30) {
+        /* Recv the io_error flag */
+        int err = read_int(f1);
+        if (!ignore_errors)
+            io_error |= err;
+    } else if (inc_recurse && flist->ndx_start == 1) {
+        if (!file_total || strcmp(flist->sorted[flist->low]->basename, ".") != 0)
+            flist->parent_ndx = -1;
+    }
+
+    if (DEBUG_GTE(FLIST, 3))
+        output_flist(flist);
+
+    if (DEBUG_GTE(FLIST, 2))
+        rprintf(FINFO, "recv_file_list done\n");
+
+    stats.flist_size += stats.total_read - start_read;
+    stats.num_files += flist->used;
+
+    /* part 2 other task */
+    int exit_code;
+    char *local_name = NULL;
+    int negated_levels;
+    int error_pipe[2];
+
+    if (!flist) {
+        rprintf(FERROR,"server_recv: recv_file_list error\n");
+        exit_cleanup(RERR_FILESELECT);
+    }
+
+    if (inc_recurse && file_total == 1)
+        recv_additional_file_list(f1);
+
+    if (negated_levels)
+        negate_output_levels();
+
+    if (argc > 0)
+        local_name = get_local_name(flist,argv[0]);
+
+    /* Now that we know what our destination directory turned out to be,
+     * we can sanitize the --link-/copy-/compare-dest args correctly. */
+    if (sanitize_paths) {
+        char **dir_p;
+        for (dir_p = basis_dir; *dir_p; dir_p++)
+            *dir_p = sanitize_path(NULL, *dir_p, NULL, curr_dir_depth, SP_DEFAULT);
+        if (partial_dir)
+            partial_dir = sanitize_path(NULL, partial_dir, NULL, curr_dir_depth, SP_DEFAULT);
+    }
+    check_alt_basis_dirs();
+
+    if (daemon_filter_list.head) {
+        char **dir_p;
+        filter_rule_list *elp = &daemon_filter_list;
+
+        for (dir_p = basis_dir; *dir_p; dir_p++) {
+            char *dir = *dir_p;
+            if (*dir == '/')
+                dir += module_dirlen;
+            if (check_filter(elp, FLOG, dir, 1) < 0)
+                goto options_rejected;
+        }
+        if (partial_dir && *partial_dir == '/'
+            && check_filter(elp, FLOG, partial_dir + module_dirlen, 1) < 0) {
+            options_rejected:
+            rprintf(FERROR,
+                    "Your options have been rejected by the server.\n");
+            exit_cleanup(RERR_SYNTAX);
+        }
+    }
+
+    /* The receiving side mustn't obey this, or an existing symlink that
+	 * points to an identical file won't be replaced by the referent. */
+    copy_links = copy_dirlinks = copy_unsafe_links = 0;
+
+#ifdef SUPPORT_HARD_LINKS
+    if (preserve_hard_links && !inc_recurse)
+        match_hard_links(first_flist);
+#endif
+
+    if (fd_pair(error_pipe) < 0) {
+        rsyserr(FERROR, errno, "pipe failed in do_recv");
+        exit_cleanup(RERR_IPC);
+    }
+
+    if (backup_dir) {
+        STRUCT_STAT st;
+        int ret;
+        if (backup_dir_len > 1)
+            backup_dir_buf[backup_dir_len-1] = '\0';
+        ret = do_stat(backup_dir_buf, &st);
+        if (ret != 0 || !S_ISDIR(st.st_mode)) {
+            if (ret == 0) {
+                rprintf(FERROR, "The backup-dir is not a directory: %s\n", backup_dir_buf);
+                exit_cleanup(RERR_SYNTAX);
+            }
+            if (errno != ENOENT) {
+                rprintf(FERROR, "Failed to stat %s: %s\n", backup_dir_buf, strerror(errno));
+                exit_cleanup(RERR_FILEIO);
+            }
+            if (INFO_GTE(BACKUP, 1))
+                rprintf(FINFO, "(new) backup_dir is %s\n", backup_dir_buf);
+        } else if (INFO_GTE(BACKUP, 1))
+            rprintf(FINFO, "backup_dir is %s\n", backup_dir_buf);
+        if (backup_dir_len > 1)
+            backup_dir_buf[backup_dir_len-1] = '/';
+    }
+
+    io_flush(FULL_FLUSH);
+
+    am_receiver = 1;
+    send_msgs_to_gen = am_server;
+
+    close(error_pipe[0]);
+
+    /* We can't let two processes write to the socket at one time. */
+    io_end_multiplex_out(MPLX_SWITCHING);
+    if (f1 != f2)
+        close(f2);
+    sock_f_out = -1;
+    f2 = error_pipe[1];
+
+    bwlimit_writemax = 0; /* receiver doesn't need to do this */
+
+    if (read_batch)
+        io_start_buffering_in(f1);
+    io_start_multiplex_out(f2);
+
+    /* part 3 recv files*/
+    int fd1,fd2;
+    STRUCT_STAT st;
+    int iflags, xlen;
+    char *fname, fbuf[MAXPATHLEN];
+    char xname[MAXPATHLEN];
+    char fnametmp[MAXPATHLEN];
+    char *fnamecmp, *partialptr;
+    char fnamecmpbuf[MAXPATHLEN];
+    uchar fnamecmp_type;
+    int itemizing = am_server ? logfile_format_has_i : stdout_format_has_i;
+    enum logcode log_code = log_before_transfer ? FLOG : FINFO;
+    int max_phase = protocol_version >= 29 ? 2 : 1;
+#ifdef SUPPORT_ACLS
+    const char *parent_dirname = "";
+#endif
+    int ndx, recv_ok;
+
+    if (DEBUG_GTE(RECV, 1))
+        rprintf(FINFO, "recv_files(%d) starting\n", flist->used);
+
+    if (delay_updates)
+        delayed_bits = bitbag_create(flist->used + 1);
+
+    while (1) {
+        cleanup_disable();
+
+        fname = local_name ? local_name : f_name(file, fbuf);
+
+        if (DEBUG_GTE(RECV, 1))
+            rprintf(FINFO, "recv_files(%s)\n", fname);
+
+        if (daemon_filter_list.head && (*fname != '.' || fname[1] != '\0')
+            && check_filter(&daemon_filter_list, FLOG, fname, 0) < 0) {
+            rprintf(FERROR, "attempt to hack rsync failed.\n");
+            exit_cleanup(RERR_PROTOCOL);
+        }
+
+        if (phase == 2) {
+            rprintf(FERROR,
+                    "got transfer request in phase 2 [%s]\n",
+                    who_am_i());
+            exit_cleanup(RERR_PROTOCOL);
+        }
+
+
+
+        remember_initial_stats();
+
+        partialptr = partial_dir ? partial_dir_fname(fname) : fname;
+
+        if (protocol_version >= 29) {
+            switch (fnamecmp_type) {
+                case FNAMECMP_FNAME:
+                    fnamecmp = fname;
+                    break;
+                case FNAMECMP_PARTIAL_DIR:
+                    fnamecmp = partialptr;
+                    break;
+                case FNAMECMP_BACKUP:
+                    fnamecmp = get_backup_name(fname);
+                    break;
+                case FNAMECMP_FUZZY:
+                    if (file->dirname) {
+                        pathjoin(fnamecmpbuf, sizeof fnamecmpbuf, file->dirname, xname);
+                        fnamecmp = fnamecmpbuf;
+                    } else
+                        fnamecmp = xname;
+                    break;
+                default:
+                    if (fnamecmp_type > FNAMECMP_FUZZY && fnamecmp_type-FNAMECMP_FUZZY <= basis_dir_cnt) {
+                        fnamecmp_type -= FNAMECMP_FUZZY + 1;
+                        if (file->dirname) {
+                            stringjoin(fnamecmpbuf, sizeof fnamecmpbuf,
+                                       basis_dir[fnamecmp_type], "/", file->dirname, "/", xname, NULL);
+                        } else
+                            pathjoin(fnamecmpbuf, sizeof fnamecmpbuf, basis_dir[fnamecmp_type], xname);
+                    } else if (fnamecmp_type >= basis_dir_cnt) {
+                        rprintf(FERROR,
+                                "invalid basis_dir index: %d.\n",
+                                fnamecmp_type);
+                        exit_cleanup(RERR_PROTOCOL);
+                    } else
+                        pathjoin(fnamecmpbuf, sizeof fnamecmpbuf, basis_dir[fnamecmp_type], fname);
+                    fnamecmp = fnamecmpbuf;
+                    break;
+            }
+            if (!fnamecmp || (daemon_filter_list.head
+                              && check_filter(&daemon_filter_list, FLOG, fnamecmp, 0) < 0)) {
+                fnamecmp = fname;
+                fnamecmp_type = FNAMECMP_FNAME;
+            }
+        } else {
+            /* Reminder: --inplace && --partial-dir are never
+             * enabled at the same time. */
+            if (inplace && make_backups > 0) {
+                if (!(fnamecmp = get_backup_name(fname)))
+                    fnamecmp = fname;
+                else
+                    fnamecmp_type = FNAMECMP_BACKUP;
+            } else if (partial_dir && partialptr)
+                fnamecmp = partialptr;
+            else
+                fnamecmp = fname;
+        }
+
+        /* open the file */
+        fd1 = do_open(fnamecmp, O_RDONLY, 0);
+
+        if (fd1 == -1 && protocol_version < 29) {
+            if (fnamecmp != fname) {
+                fnamecmp = fname;
+                fd1 = do_open(fnamecmp, O_RDONLY, 0);
+            }
+
+            if (fd1 == -1 && basis_dir[0]) {
+                /* pre-29 allowed only one alternate basis */
+                pathjoin(fnamecmpbuf, sizeof fnamecmpbuf,
+                         basis_dir[0], fname);
+                fnamecmp = fnamecmpbuf;
+                fd1 = do_open(fnamecmp, O_RDONLY, 0);
+            }
+        }
+
+        updating_basis_or_equiv = inplace
+                                  && (fnamecmp == fname || fnamecmp_type == FNAMECMP_BACKUP);
+
+        if (fd1 == -1) {
+            st.st_mode = 0;
+            st.st_size = 0;
+        } else if (do_fstat(fd1,&st) != 0) {
+            rsyserr(FERROR_XFER, errno, "fstat %s failed",
+                    full_fname(fnamecmp));
+            discard_receive_data(f1, F_LENGTH(file));
+            close(fd1);
+            if (inc_recurse)
+                send_msg_int(MSG_NO_SEND, ndx);
+            continue;
+        }
+
+        if (fd1 != -1 && S_ISDIR(st.st_mode) && fnamecmp == fname) {
+            /* this special handling for directories
+             * wouldn't be necessary if robust_rename()
+             * and the underlying robust_unlink could cope
+             * with directories
+             */
+            rprintf(FERROR_XFER, "recv_files: %s is a directory\n",
+                    full_fname(fnamecmp));
+            discard_receive_data(f1, F_LENGTH(file));
+            close(fd1);
+            if (inc_recurse)
+                send_msg_int(MSG_NO_SEND, ndx);
+            continue;
+        }
+
+        if (fd1 != -1 && !S_ISREG(st.st_mode)) {
+            close(fd1);
+            fd1 = -1;
+        }
+
+        /* If we're not preserving permissions, change the file-list's
+         * mode based on the local permissions and some heuristics. */
+        if (!preserve_perms) {
+            int exists = fd1 != -1;
+
+
+        /* We now check to see if we are writing the file "inplace" */
+        if (inplace)  {
+            fd2 = do_open(fname, O_WRONLY|O_CREAT, 0600);
+            if (fd2 == -1) {
+                rsyserr(FERROR_XFER, errno, "open %s failed",
+                        full_fname(fname));
+            } else if (updating_basis_or_equiv)
+                cleanup_set(NULL, NULL, file, fd1, fd2);
+        } else {
+            fd2 = open_tmpfile(fnametmp, fname, file);
+            if (fd2 != -1)
+                cleanup_set(fnametmp, partialptr, file, fd1, fd2);
+        }
+
+        if (fd2 == -1) {
+            discard_receive_data(f1, F_LENGTH(file));
+            if (fd1 != -1)
+                close(fd1);
+            if (inc_recurse)
+                send_msg_int(MSG_NO_SEND, ndx);
+            continue;
+        }
+
+        /* log the transfer */
+        if (log_before_transfer)
+            log_item(FCLIENT, file, iflags, NULL);
+        else if (!am_server && INFO_GTE(NAME, 1) && INFO_EQ(PROGRESS, 1))
+            rprintf(FINFO, "%s\n", fname);
+
+        /* recv file data */
+        recv_ok = receive_data(f1, fnamecmp, fd1, st.st_size,
+                               fname, fd2, F_LENGTH(file));
+
+        log_item(log_code, file, iflags, NULL);
+
+        if (fd1 != -1)
+            close(fd1);
+        if (close(fd2) < 0) {
+            rsyserr(FERROR, errno, "close failed on %s",
+                    full_fname(fnametmp));
+            exit_cleanup(RERR_FILEIO);
+        }
+
+        if ((recv_ok && (!delay_updates || !partialptr)) || inplace) {
+            if (partialptr == fname)
+                partialptr = NULL;
+            if (!finish_transfer(fname, fnametmp, fnamecmp,
+                                 partialptr, file, recv_ok, 1))
+                recv_ok = -1;
+            else if (fnamecmp == partialptr) {
+                do_unlink(partialptr);
+                handle_partial_dir(partialptr, PDIR_DELETE);
+            }
+        } else if (keep_partial && partialptr) {
+            if (!handle_partial_dir(partialptr, PDIR_CREATE)) {
+                rprintf(FERROR,
+                        "Unable to create partial-dir for %s -- discarding %s.\n",
+                        local_name ? local_name : f_name(file, NULL),
+                        recv_ok ? "completed file" : "partial file");
+                do_unlink(fnametmp);
+                recv_ok = -1;
+            } else if (!finish_transfer(partialptr, fnametmp, fnamecmp, NULL,
+                                        file, recv_ok, !partial_dir))
+                recv_ok = -1;
+            else if (delay_updates && recv_ok) {
+                bitbag_set_bit(delayed_bits, ndx);
+                recv_ok = 2;
+            } else
+                partialptr = NULL;
+        } else
+            do_unlink(fnametmp);
+
+        cleanup_disable();
+
+        if (read_batch)
+            file->flags |= FLAG_FILE_SENT;
+
+        switch (recv_ok) {
+            case 2:
+                break;
+            case 1:
+                if (remove_source_files || inc_recurse
+                    || (preserve_hard_links && F_IS_HLINKED(file)))
+                    send_msg_int(MSG_SUCCESS, ndx);
+                break;
+            case 0: {
+                enum logcode msgtype = redoing ? FERROR_XFER : FWARNING;
+                if (msgtype == FERROR_XFER || INFO_GTE(NAME, 1)) {
+                    char *errstr, *redostr, *keptstr;
+                    if (!(keep_partial && partialptr) && !inplace)
+                        keptstr = "discarded";
+                    else if (partial_dir)
+                        keptstr = "put into partial-dir";
+                    else
+                        keptstr = "retained";
+                    if (msgtype == FERROR_XFER) {
+                        errstr = "ERROR";
+                        redostr = "";
+                    } else {
+                        errstr = "WARNING";
+                        redostr = read_batch ? " (may try again)"
+                                             : " (will try again)";
+                    }
+                    rprintf(msgtype,
+                            "%s: %s failed verification -- update %s%s.\n",
+                            errstr, local_name ? f_name(file, NULL) : fname,
+                            keptstr, redostr);
+                }
+                if (!redoing) {
+                    if (read_batch)
+                        flist_ndx_push(&batch_redo_list, ndx);
+                    send_msg_int(MSG_REDO, ndx);
+                    file->flags |= FLAG_FILE_SENT;
+                } else if (inc_recurse)
+                    send_msg_int(MSG_NO_SEND, ndx);
+                break;
+            }
+            case -1:
+                if (inc_recurse)
+                    send_msg_int(MSG_NO_SEND, ndx);
+                break;
+        }
+    }
+    if (make_backups < 0)
+        make_backups = -make_backups;
+
+    if (phase == 2 && delay_updates) /* for protocol_version < 29 */
+        handle_delayed_updates(local_name);
+
+    if (DEBUG_GTE(RECV, 1))
+        rprintf(FINFO,"recv_files finished\n");
+
+    return flist;
+}
 
 struct file_list *recv_file_list(int f, int dir_ndx)
 {
@@ -3319,173 +3923,173 @@ void flist_free(struct file_list *flist)
  * duplicate names can cause corruption because of the pipelining. */
 static void flist_sort_and_clean(struct file_list *flist, int strip_root)
 {
-	char fbuf[MAXPATHLEN];
-	int i, prev_i;
+    char fbuf[MAXPATHLEN];
+    int i, prev_i;
 
-	if (!flist)
-		return;
-	if (flist->used == 0) {
-		flist->high = -1;
-		flist->low = 0;
-		return;
-	}
+    if (!flist)
+        return;
+    if (flist->used == 0) {
+        flist->high = -1;
+        flist->low = 0;
+        return;
+    }
 
-	fsort(flist->sorted, flist->used);
+    fsort(flist->sorted, flist->used);
 
-	if (!am_sender || inc_recurse) {
-		for (i = prev_i = 0; i < flist->used; i++) {
-			if (F_IS_ACTIVE(flist->sorted[i])) {
-				prev_i = i;
-				break;
-			}
-		}
-		flist->low = prev_i;
-	} else {
-		i = prev_i = flist->used - 1;
-		flist->low = 0;
-	}
+    if (!am_sender || inc_recurse) {
+        for (i = prev_i = 0; i < flist->used; i++) {
+            if (F_IS_ACTIVE(flist->sorted[i])) {
+                prev_i = i;
+                break;
+            }
+        }
+        flist->low = prev_i;
+    } else {
+        i = prev_i = flist->used - 1;
+        flist->low = 0;
+    }
 
-	while (++i < flist->used) {
-		int j;
-		struct file_struct *file = flist->sorted[i];
+    while (++i < flist->used) {
+        int j;
+        struct file_struct *file = flist->sorted[i];
 
-		if (!F_IS_ACTIVE(file))
-			continue;
-		if (f_name_cmp(file, flist->sorted[prev_i]) == 0)
-			j = prev_i;
-		else if (protocol_version >= 29 && S_ISDIR(file->mode)) {
-			int save_mode = file->mode;
-			/* Make sure that this directory doesn't duplicate a
-			 * non-directory earlier in the list. */
-			flist->high = prev_i;
-			file->mode = S_IFREG;
-			j = flist_find(flist, file);
-			file->mode = save_mode;
-		} else
-			j = -1;
-		if (j >= 0) {
-			int keep, drop;
-			/* If one is a dir and the other is not, we want to
-			 * keep the dir because it might have contents in the
-			 * list.  Otherwise keep the first one. */
-			if (S_ISDIR(file->mode)) {
-				struct file_struct *fp = flist->sorted[j];
-				if (!S_ISDIR(fp->mode))
-					keep = i, drop = j;
-				else {
-					if (am_sender)
-						file->flags |= FLAG_DUPLICATE;
-					else { /* Make sure we merge our vital flags. */
-						fp->flags |= file->flags & (FLAG_TOP_DIR|FLAG_CONTENT_DIR);
-						fp->flags &= file->flags | ~FLAG_IMPLIED_DIR;
-					}
-					keep = j, drop = i;
-				}
-			} else
-				keep = j, drop = i;
+        if (!F_IS_ACTIVE(file))
+            continue;
+        if (f_name_cmp(file, flist->sorted[prev_i]) == 0)
+            j = prev_i;
+        else if (protocol_version >= 29 && S_ISDIR(file->mode)) {
+            int save_mode = file->mode;
+            /* Make sure that this directory doesn't duplicate a
+             * non-directory earlier in the list. */
+            flist->high = prev_i;
+            file->mode = S_IFREG;
+            j = flist_find(flist, file);
+            file->mode = save_mode;
+        } else
+            j = -1;
+        if (j >= 0) {
+            int keep, drop;
+            /* If one is a dir and the other is not, we want to
+             * keep the dir because it might have contents in the
+             * list.  Otherwise keep the first one. */
+            if (S_ISDIR(file->mode)) {
+                struct file_struct *fp = flist->sorted[j];
+                if (!S_ISDIR(fp->mode))
+                    keep = i, drop = j;
+                else {
+                    if (am_sender)
+                        file->flags |= FLAG_DUPLICATE;
+                    else { /* Make sure we merge our vital flags. */
+                        fp->flags |= file->flags & (FLAG_TOP_DIR|FLAG_CONTENT_DIR);
+                        fp->flags &= file->flags | ~FLAG_IMPLIED_DIR;
+                    }
+                    keep = j, drop = i;
+                }
+            } else
+                keep = j, drop = i;
 
-			if (!am_sender) {
-				if (DEBUG_GTE(DUP, 1)) {
-					rprintf(FINFO,
-					    "removing duplicate name %s from file list (%d)\n",
-					    f_name(file, fbuf), drop + flist->ndx_start);
-				}
-				clear_file(flist->sorted[drop]);
-			}
+            if (!am_sender) {
+                if (DEBUG_GTE(DUP, 1)) {
+                    rprintf(FINFO,
+                            "removing duplicate name %s from file list (%d)\n",
+                            f_name(file, fbuf), drop + flist->ndx_start);
+                }
+                clear_file(flist->sorted[drop]);
+            }
 
-			if (keep == i) {
-				if (flist->low == drop) {
-					for (j = drop + 1;
-					     j < i && !F_IS_ACTIVE(flist->sorted[j]);
-					     j++) {}
-					flist->low = j;
-				}
-				prev_i = i;
-			}
-		} else
-			prev_i = i;
-	}
-	flist->high = prev_i;
+            if (keep == i) {
+                if (flist->low == drop) {
+                    for (j = drop + 1;
+                         j < i && !F_IS_ACTIVE(flist->sorted[j]);
+                         j++) {}
+                    flist->low = j;
+                }
+                prev_i = i;
+            }
+        } else
+            prev_i = i;
+    }
+    flist->high = prev_i;
 
-	if (strip_root) {
-		/* We need to strip off the leading slashes for relative
-		 * paths, but this must be done _after_ the sorting phase. */
-		for (i = flist->low; i <= flist->high; i++) {
-			struct file_struct *file = flist->sorted[i];
+    if (strip_root) {
+        /* We need to strip off the leading slashes for relative
+         * paths, but this must be done _after_ the sorting phase. */
+        for (i = flist->low; i <= flist->high; i++) {
+            struct file_struct *file = flist->sorted[i];
 
-			if (!file->dirname)
-				continue;
-			while (*file->dirname == '/')
-				file->dirname++;
-			if (!*file->dirname)
-				file->dirname = NULL;
-		}
-	}
+            if (!file->dirname)
+                continue;
+            while (*file->dirname == '/')
+                file->dirname++;
+            if (!*file->dirname)
+                file->dirname = NULL;
+        }
+    }
 
-	if (prune_empty_dirs && !am_sender) {
-		int j, prev_depth = 0;
+    if (prune_empty_dirs && !am_sender) {
+        int j, prev_depth = 0;
 
-		prev_i = 0; /* It's OK that this isn't really true. */
+        prev_i = 0; /* It's OK that this isn't really true. */
 
-		for (i = flist->low; i <= flist->high; i++) {
-			struct file_struct *fp, *file = flist->sorted[i];
+        for (i = flist->low; i <= flist->high; i++) {
+            struct file_struct *fp, *file = flist->sorted[i];
 
-			/* This temporarily abuses the F_DEPTH() value for a
-			 * directory that is in a chain that might get pruned.
-			 * We restore the old value if it gets a reprieve. */
-			if (S_ISDIR(file->mode) && F_DEPTH(file)) {
-				/* Dump empty dirs when coming back down. */
-				for (j = prev_depth; j >= F_DEPTH(file); j--) {
-					fp = flist->sorted[prev_i];
-					if (F_DEPTH(fp) >= 0)
-						break;
-					prev_i = -F_DEPTH(fp)-1;
-					clear_file(fp);
-				}
-				prev_depth = F_DEPTH(file);
-				if (is_excluded(f_name(file, fbuf), 1, ALL_FILTERS)) {
-					/* Keep dirs through this dir. */
-					for (j = prev_depth-1; ; j--) {
-						fp = flist->sorted[prev_i];
-						if (F_DEPTH(fp) >= 0)
-							break;
-						prev_i = -F_DEPTH(fp)-1;
-						F_DEPTH(fp) = j;
-					}
-				} else
-					F_DEPTH(file) = -prev_i-1;
-				prev_i = i;
-			} else {
-				/* Keep dirs through this non-dir. */
-				for (j = prev_depth; ; j--) {
-					fp = flist->sorted[prev_i];
-					if (F_DEPTH(fp) >= 0)
-						break;
-					prev_i = -F_DEPTH(fp)-1;
-					F_DEPTH(fp) = j;
-				}
-			}
-		}
-		/* Dump all remaining empty dirs. */
-		while (1) {
-			struct file_struct *fp = flist->sorted[prev_i];
-			if (F_DEPTH(fp) >= 0)
-				break;
-			prev_i = -F_DEPTH(fp)-1;
-			clear_file(fp);
-		}
+            /* This temporarily abuses the F_DEPTH() value for a
+             * directory that is in a chain that might get pruned.
+             * We restore the old value if it gets a reprieve. */
+            if (S_ISDIR(file->mode) && F_DEPTH(file)) {
+                /* Dump empty dirs when coming back down. */
+                for (j = prev_depth; j >= F_DEPTH(file); j--) {
+                    fp = flist->sorted[prev_i];
+                    if (F_DEPTH(fp) >= 0)
+                        break;
+                    prev_i = -F_DEPTH(fp)-1;
+                    clear_file(fp);
+                }
+                prev_depth = F_DEPTH(file);
+                if (is_excluded(f_name(file, fbuf), 1, ALL_FILTERS)) {
+                    /* Keep dirs through this dir. */
+                    for (j = prev_depth-1; ; j--) {
+                        fp = flist->sorted[prev_i];
+                        if (F_DEPTH(fp) >= 0)
+                            break;
+                        prev_i = -F_DEPTH(fp)-1;
+                        F_DEPTH(fp) = j;
+                    }
+                } else
+                    F_DEPTH(file) = -prev_i-1;
+                prev_i = i;
+            } else {
+                /* Keep dirs through this non-dir. */
+                for (j = prev_depth; ; j--) {
+                    fp = flist->sorted[prev_i];
+                    if (F_DEPTH(fp) >= 0)
+                        break;
+                    prev_i = -F_DEPTH(fp)-1;
+                    F_DEPTH(fp) = j;
+                }
+            }
+        }
+        /* Dump all remaining empty dirs. */
+        while (1) {
+            struct file_struct *fp = flist->sorted[prev_i];
+            if (F_DEPTH(fp) >= 0)
+                break;
+            prev_i = -F_DEPTH(fp)-1;
+            clear_file(fp);
+        }
 
-		for (i = flist->low; i <= flist->high; i++) {
-			if (F_IS_ACTIVE(flist->sorted[i]))
-				break;
-		}
-		flist->low = i;
-		for (i = flist->high; i >= flist->low; i--) {
-			if (F_IS_ACTIVE(flist->sorted[i]))
-				break;
-		}
-		flist->high = i;
-	}
+        for (i = flist->low; i <= flist->high; i++) {
+            if (F_IS_ACTIVE(flist->sorted[i]))
+                break;
+        }
+        flist->low = i;
+        for (i = flist->high; i >= flist->low; i--) {
+            if (F_IS_ACTIVE(flist->sorted[i]))
+                break;
+        }
+        flist->high = i;
+    }
 }
 
 static void output_flist(struct file_list *flist)
@@ -3720,39 +4324,38 @@ char *f_name(const struct file_struct *f, char *fbuf)
  * of the dirname string, and also indicates that "dirname" is a MAXPATHLEN
  * buffer (the functions we call will append names onto the end, but the old
  * dir value will be restored on exit). */
-struct file_list *get_dirlist(char *dirname, int dlen, int flags)
-{
-	struct file_list *dirlist;
-	char dirbuf[MAXPATHLEN];
-	int save_recurse = recurse;
-	int save_xfer_dirs = xfer_dirs;
-	int save_prune_empty_dirs = prune_empty_dirs;
-	int senddir_fd = flags & GDL_IGNORE_FILTER_RULES ? -2 : -1;
+struct file_list *get_dirlist(char *dirname, int dlen, int flags) {
+    struct file_list *dirlist;
+    char dirbuf[MAXPATHLEN];
+    int save_recurse = recurse;
+    int save_xfer_dirs = xfer_dirs;
+    int save_prune_empty_dirs = prune_empty_dirs;
+    int senddir_fd = flags & GDL_IGNORE_FILTER_RULES ? -2 : -1;
 
-	if (dlen < 0) {
-		dlen = strlcpy(dirbuf, dirname, MAXPATHLEN);
-		if (dlen >= MAXPATHLEN)
-			return NULL;
-		dirname = dirbuf;
-	}
+    if (dlen < 0) {
+        dlen = strlcpy(dirbuf, dirname, MAXPATHLEN);
+        if (dlen >= MAXPATHLEN)
+            return NULL;
+        dirname = dirbuf;
+    }
 
-	dirlist = flist_new(FLIST_TEMP, "get_dirlist");
+    dirlist = flist_new(FLIST_TEMP, "get_dirlist");
 
-	recurse = 0;
-	xfer_dirs = 1;
-	send_directory(senddir_fd, dirlist, dirname, dlen, FLAG_CONTENT_DIR);
-	xfer_dirs = save_xfer_dirs;
-	recurse = save_recurse;
-	if (INFO_GTE(PROGRESS, 1))
-		flist_count_offset += dirlist->used;
+    recurse = 0;
+    xfer_dirs = 1;
+    send_directory(senddir_fd, dirlist, dirname, dlen, FLAG_CONTENT_DIR);
+    xfer_dirs = save_xfer_dirs;
+    recurse = save_recurse;
+    if (INFO_GTE(PROGRESS, 1))
+        flist_count_offset += dirlist->used;
 
-	prune_empty_dirs = 0;
-	dirlist->sorted = dirlist->files;
-	flist_sort_and_clean(dirlist, 0);
-	prune_empty_dirs = save_prune_empty_dirs;
+    prune_empty_dirs = 0;
+    dirlist->sorted = dirlist->files;
+    flist_sort_and_clean(dirlist, 0);
+    prune_empty_dirs = save_prune_empty_dirs;
 
-	if (DEBUG_GTE(FLIST, 3))
-		output_flist(dirlist);
+    if (DEBUG_GTE(FLIST, 3))
+        output_flist(dirlist);
 
-	return dirlist;
+    return dirlist;
 }

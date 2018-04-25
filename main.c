@@ -891,101 +891,102 @@ static int do_recv(int f_in, int f_out, char *local_name)
 
 	io_flush(FULL_FLUSH);
 
-	if ((pid = do_fork()) == -1) {
-		rsyserr(FERROR, errno, "fork failed in do_recv");
-		exit_cleanup(RERR_IPC);
-	}
+        if ((pid = do_fork()) == -1) {
+            rsyserr(FERROR, errno, "fork failed in do_recv");
+            exit_cleanup(RERR_IPC);
+        }
 
-	if (pid == 0) {
-		am_receiver = 1;
-		send_msgs_to_gen = am_server;
+        if (pid == 0) {
+            am_receiver = 1;
+            send_msgs_to_gen = am_server;
 
-		close(error_pipe[0]);
+            close(error_pipe[0]);
 
-		/* We can't let two processes write to the socket at one time. */
-		io_end_multiplex_out(MPLX_SWITCHING);
-		if (f_in != f_out)
-			close(f_out);
-		sock_f_out = -1;
-		f_out = error_pipe[1];
+            /* We can't let two processes write to the socket at one time. */
+            io_end_multiplex_out(MPLX_SWITCHING);
+            if (f_in != f_out)
+                close(f_out);
+            sock_f_out = -1;
+            f_out = error_pipe[1];
 
-		bwlimit_writemax = 0; /* receiver doesn't need to do this */
+            bwlimit_writemax = 0; /* receiver doesn't need to do this */
 
-		if (read_batch)
-			io_start_buffering_in(f_in);
-		io_start_multiplex_out(f_out);
+            if (read_batch)
+                io_start_buffering_in(f_in);
+            io_start_multiplex_out(f_out);
 
-		recv_files(f_in, f_out, local_name);
-		io_flush(FULL_FLUSH);
-		handle_stats(f_in);
+            recv_files(f_in, f_out, local_name);
+            io_flush(FULL_FLUSH);
+            handle_stats(f_in);
 
-		if (output_needs_newline) {
-			fputc('\n', stdout);
-			output_needs_newline = 0;
-		}
+            if (output_needs_newline) {
+                fputc('\n', stdout);
+                output_needs_newline = 0;
+            }
 
-		write_int(f_out, NDX_DONE);
-		send_msg(MSG_STATS, (char*)&stats.total_read, sizeof stats.total_read, 0);
-		io_flush(FULL_FLUSH);
+            write_int(f_out, NDX_DONE);
+            send_msg(MSG_STATS, (char*)&stats.total_read, sizeof stats.total_read, 0);
+            io_flush(FULL_FLUSH);
 
-		/* Handle any keep-alive packets from the post-processing work
-		 * that the generator does. */
-		if (protocol_version >= 29) {
-			kluge_around_eof = -1;
+            /* Handle any keep-alive packets from the post-processing work
+             * that the generator does. */
+            if (protocol_version >= 29) {
+                kluge_around_eof = -1;
 
-			/* This should only get stopped via a USR2 signal. */
-			read_final_goodbye(f_in, f_out);
+                /* This should only get stopped via a USR2 signal. */
+                read_final_goodbye(f_in, f_out);
 
-			rprintf(FERROR, "Invalid packet at end of run [%s]\n",
-				who_am_i());
-			exit_cleanup(RERR_PROTOCOL);
-		}
+                rprintf(FERROR, "Invalid packet at end of run [%s]\n",
+                        who_am_i());
+                exit_cleanup(RERR_PROTOCOL);
+            }
 
-		/* Finally, we go to sleep until our parent kills us with a
-		 * USR2 signal.  We sleep for a short time, as on some OSes
-		 * a signal won't interrupt a sleep! */
-		while (1)
-			msleep(20);
-	}
+            /* Finally, we go to sleep until our parent kills us with a
+             * USR2 signal.  We sleep for a short time, as on some OSes
+             * a signal won't interrupt a sleep! */
+            while (1)
+                msleep(20);
+        }
 
-	am_generator = 1;
-	flist_receiving_enabled = True;
+        am_generator = 1;
+        flist_receiving_enabled = True;
 
-	io_end_multiplex_in(MPLX_SWITCHING);
-	if (write_batch && !am_server)
-		stop_write_batch();
+        io_end_multiplex_in(MPLX_SWITCHING);
+        if (write_batch && !am_server)
+            stop_write_batch();
 
-	close(error_pipe[1]);
-	if (f_in != f_out)
-		close(f_in);
-	sock_f_in = -1;
-	f_in = error_pipe[0];
+        close(error_pipe[1]);
+        if (f_in != f_out)
+            close(f_in);
+        sock_f_in = -1;
+        f_in = error_pipe[0];
 
-	io_start_buffering_out(f_out);
-	io_start_multiplex_in(f_in);
+        io_start_buffering_out(f_out);
+        io_start_multiplex_in(f_in);
 
 #ifdef SUPPORT_HARD_LINKS
-	if (preserve_hard_links && inc_recurse) {
-		struct file_list *flist;
-		for (flist = first_flist; flist; flist = flist->next)
-			match_hard_links(flist);
-	}
+        if (preserve_hard_links && inc_recurse) {
+            struct file_list *flist;
+            for (flist = first_flist; flist; flist = flist->next)
+                match_hard_links(flist);
+        }
 #endif
 
-	generate_files(f_out, local_name);
+        generate_files(f_out, local_name);
 
-	handle_stats(-1);
-	io_flush(FULL_FLUSH);
-	shutting_down = True;
-	if (protocol_version >= 24) {
-		/* send a final goodbye message */
-		write_ndx(f_out, NDX_DONE);
-	}
-	io_flush(FULL_FLUSH);
+        handle_stats(-1);
+        io_flush(FULL_FLUSH);
+        shutting_down = True;
+        if (protocol_version >= 24) {
+            /* send a final goodbye message */
+            write_ndx(f_out, NDX_DONE);
+        }
+        io_flush(FULL_FLUSH);
 
-	kill(pid, SIGUSR2);
-	wait_process_with_flush(pid, &exit_code);
-	return exit_code;
+        kill(pid, SIGUSR2);
+        wait_process_with_flush(pid, &exit_code);
+        return exit_code;
+
 }
 
 static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
@@ -1039,54 +1040,90 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
 		filesfrom_fd = -1;
 	}
 
-	flist = recv_file_list(f_in, -1);
-	if (!flist) {
-		rprintf(FERROR,"server_recv: recv_file_list error\n");
-		exit_cleanup(RERR_FILESELECT);
-	}
-	
-	if (inc_recurse && file_total == 1)
-		recv_additional_file_list(f_in);
+    if(whole_file == 1){
+        flist = recv_file_list_and_file(f_in,f_out,-1,argc,argv);
 
-	if (negated_levels)
-		negate_output_levels();
+        io_flush(FULL_FLUSH);
+        handle_stats(f_in);
 
-	if (argc > 0)
-		local_name = get_local_name(flist,argv[0]);
+        if (output_needs_newline) {
+            fputc('\n', stdout);
+            output_needs_newline = 0;
+        }
 
-	/* Now that we know what our destination directory turned out to be,
-	 * we can sanitize the --link-/copy-/compare-dest args correctly. */
-	if (sanitize_paths) {
-		char **dir_p;
-		for (dir_p = basis_dir; *dir_p; dir_p++)
-			*dir_p = sanitize_path(NULL, *dir_p, NULL, curr_dir_depth, SP_DEFAULT);
-		if (partial_dir)
-			partial_dir = sanitize_path(NULL, partial_dir, NULL, curr_dir_depth, SP_DEFAULT);
-	}
-	check_alt_basis_dirs();
+        write_int(f_out, NDX_DONE);
+        send_msg(MSG_STATS, (char*)&stats.total_read, sizeof stats.total_read, 0);
+        io_flush(FULL_FLUSH);
 
-	if (daemon_filter_list.head) {
-		char **dir_p;
-		filter_rule_list *elp = &daemon_filter_list;
+        /* Handle any keep-alive packets from the post-processing work
+         * that the generator does. */
+        if (protocol_version >= 29) {
+            kluge_around_eof = -1;
 
-		for (dir_p = basis_dir; *dir_p; dir_p++) {
-			char *dir = *dir_p;
-			if (*dir == '/')
-				dir += module_dirlen;
-			if (check_filter(elp, FLOG, dir, 1) < 0)
-				goto options_rejected;
-		}
-		if (partial_dir && *partial_dir == '/'
-		 && check_filter(elp, FLOG, partial_dir + module_dirlen, 1) < 0) {
-		    options_rejected:
-			rprintf(FERROR,
-				"Your options have been rejected by the server.\n");
-			exit_cleanup(RERR_SYNTAX);
-		}
-	}
+            /* This should only get stopped via a USR2 signal. */
+            read_final_goodbye(f_in, f_out);
 
-	exit_code = do_recv(f_in, f_out, local_name);
-	exit_cleanup(exit_code);
+            rprintf(FERROR, "Invalid packet at end of run [%s]\n",
+                    who_am_i());
+            exit_cleanup(RERR_PROTOCOL);
+        }
+
+        /* Finally, we go to sleep until our parent kills us with a
+         * USR2 signal.  We sleep for a short time, as on some OSes
+         * a signal won't interrupt a sleep! */
+        while (1)
+            msleep(20);
+    }else{
+        flist = recv_file_list(f_in, -1);
+        if (!flist) {
+            rprintf(FERROR,"server_recv: recv_file_list error\n");
+            exit_cleanup(RERR_FILESELECT);
+        }
+
+        if (inc_recurse && file_total == 1)
+            recv_additional_file_list(f_in);
+
+        if (negated_levels)
+            negate_output_levels();
+
+        if (argc > 0)
+            local_name = get_local_name(flist,argv[0]);
+
+        /* Now that we know what our destination directory turned out to be,
+         * we can sanitize the --link-/copy-/compare-dest args correctly. */
+        if (sanitize_paths) {
+            char **dir_p;
+            for (dir_p = basis_dir; *dir_p; dir_p++)
+                *dir_p = sanitize_path(NULL, *dir_p, NULL, curr_dir_depth, SP_DEFAULT);
+            if (partial_dir)
+                partial_dir = sanitize_path(NULL, partial_dir, NULL, curr_dir_depth, SP_DEFAULT);
+        }
+        check_alt_basis_dirs();
+
+        if (daemon_filter_list.head) {
+            char **dir_p;
+            filter_rule_list *elp = &daemon_filter_list;
+
+            for (dir_p = basis_dir; *dir_p; dir_p++) {
+                char *dir = *dir_p;
+                if (*dir == '/')
+                    dir += module_dirlen;
+                if (check_filter(elp, FLOG, dir, 1) < 0)
+                    goto options_rejected;
+            }
+            if (partial_dir && *partial_dir == '/'
+                && check_filter(elp, FLOG, partial_dir + module_dirlen, 1) < 0) {
+                options_rejected:
+                rprintf(FERROR,
+                        "Your options have been rejected by the server.\n");
+                exit_cleanup(RERR_SYNTAX);
+            }
+        }
+
+        exit_code = do_recv(f_in, f_out, local_name);
+        exit_cleanup(exit_code);
+    }
+
 }
 
 
