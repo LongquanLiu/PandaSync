@@ -2941,8 +2941,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	return flist;
 }
 
-struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[])
-{
+struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[]) {
     /* part 1 recv file list */
     const char *good_dirname = NULL;
     struct file_list *flist;
@@ -2985,7 +2984,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         if (protocol_version >= 28 && (flags & XMIT_EXTENDED_FLAGS))
             flags |= read_byte(f1) << 8;
 
-        if (flags == (XMIT_EXTENDED_FLAGS|XMIT_IO_ERROR_ENDLIST)) {
+        if (flags == (XMIT_EXTENDED_FLAGS | XMIT_IO_ERROR_ENDLIST)) {
             int err;
             if (!use_safe_inc_flist) {
                 rprintf(FERROR, "Invalid flist flag: %x\n", flags);
@@ -3058,7 +3057,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         if (!(flist->sorted = new_array(struct file_struct *, flist->used)))
             out_of_memory("recv_file_list");
         memcpy(flist->sorted, flist->files,
-               flist->used * sizeof (struct file_struct*));
+               flist->used * sizeof(struct file_struct *));
         if (inc_recurse && dir_flist->used > dstart) {
             static int dir_flist_malloced = 0;
             if (dir_flist_malloced < dir_flist->malloced) {
@@ -3068,7 +3067,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                 dir_flist_malloced = dir_flist->malloced;
             }
             memcpy(dir_flist->sorted + dstart, dir_flist->files + dstart,
-                   (dir_flist->used - dstart) * sizeof (struct file_struct*));
+                   (dir_flist->used - dstart) * sizeof(struct file_struct *));
             fsort(dir_flist->sorted + dstart, dir_flist->used - dstart);
         }
     } else {
@@ -3119,7 +3118,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
     int error_pipe[2];
 
     if (!flist) {
-        rprintf(FERROR,"server_recv: recv_file_list error\n");
+        rprintf(FERROR, "server_recv: recv_file_list error\n");
         exit_cleanup(RERR_FILESELECT);
     }
 
@@ -3130,7 +3129,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         negate_output_levels();
 
     if (argc > 0)
-        local_name = get_local_name(flist,argv[0]);
+        local_name = get_local_name(flist, argv[0]);
 
     /* Now that we know what our destination directory turned out to be,
      * we can sanitize the --link-/copy-/compare-dest args correctly. */
@@ -3181,7 +3180,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         STRUCT_STAT st;
         int ret;
         if (backup_dir_len > 1)
-            backup_dir_buf[backup_dir_len-1] = '\0';
+            backup_dir_buf[backup_dir_len - 1] = '\0';
         ret = do_stat(backup_dir_buf, &st);
         if (ret != 0 || !S_ISDIR(st.st_mode)) {
             if (ret == 0) {
@@ -3197,7 +3196,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         } else if (INFO_GTE(BACKUP, 1))
             rprintf(FINFO, "backup_dir is %s\n", backup_dir_buf);
         if (backup_dir_len > 1)
-            backup_dir_buf[backup_dir_len-1] = '/';
+            backup_dir_buf[backup_dir_len - 1] = '/';
     }
 
     io_flush(FULL_FLUSH);
@@ -3221,7 +3220,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
     io_start_multiplex_out(f2);
 
     /* part 3 recv files*/
-    int fd1,fd2;
+    int fd1, fd2;
     STRUCT_STAT st;
     int iflags, xlen;
     char *fname, fbuf[MAXPATHLEN];
@@ -3266,7 +3265,6 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         }
 
 
-
         remember_initial_stats();
 
         partialptr = partial_dir ? partial_dir_fname(fname) : fname;
@@ -3290,7 +3288,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                         fnamecmp = xname;
                     break;
                 default:
-                    if (fnamecmp_type > FNAMECMP_FUZZY && fnamecmp_type-FNAMECMP_FUZZY <= basis_dir_cnt) {
+                    if (fnamecmp_type > FNAMECMP_FUZZY && fnamecmp_type - FNAMECMP_FUZZY <= basis_dir_cnt) {
                         fnamecmp_type -= FNAMECMP_FUZZY + 1;
                         if (file->dirname) {
                             stringjoin(fnamecmpbuf, sizeof fnamecmpbuf,
@@ -3350,7 +3348,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         if (fd1 == -1) {
             st.st_mode = 0;
             st.st_size = 0;
-        } else if (do_fstat(fd1,&st) != 0) {
+        } else if (do_fstat(fd1, &st) != 0) {
             rsyserr(FERROR_XFER, errno, "fstat %s failed",
                     full_fname(fnamecmp));
             discard_receive_data(f1, F_LENGTH(file));
@@ -3386,138 +3384,139 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
             int exists = fd1 != -1;
 
 
-        /* We now check to see if we are writing the file "inplace" */
-        if (inplace)  {
-            fd2 = do_open(fname, O_WRONLY|O_CREAT, 0600);
+            /* We now check to see if we are writing the file "inplace" */
+            if (inplace) {
+                fd2 = do_open(fname, O_WRONLY | O_CREAT, 0600);
+                if (fd2 == -1) {
+                    rsyserr(FERROR_XFER, errno, "open %s failed",
+                            full_fname(fname));
+                } else if (updating_basis_or_equiv)
+                    cleanup_set(NULL, NULL, file, fd1, fd2);
+            } else {
+                fd2 = open_tmpfile(fnametmp, fname, file);
+                if (fd2 != -1)
+                    cleanup_set(fnametmp, partialptr, file, fd1, fd2);
+            }
+
             if (fd2 == -1) {
-                rsyserr(FERROR_XFER, errno, "open %s failed",
-                        full_fname(fname));
-            } else if (updating_basis_or_equiv)
-                cleanup_set(NULL, NULL, file, fd1, fd2);
-        } else {
-            fd2 = open_tmpfile(fnametmp, fname, file);
-            if (fd2 != -1)
-                cleanup_set(fnametmp, partialptr, file, fd1, fd2);
-        }
-
-        if (fd2 == -1) {
-            discard_receive_data(f1, F_LENGTH(file));
-            if (fd1 != -1)
-                close(fd1);
-            if (inc_recurse)
-                send_msg_int(MSG_NO_SEND, ndx);
-            continue;
-        }
-
-        /* log the transfer */
-        if (log_before_transfer)
-            log_item(FCLIENT, file, iflags, NULL);
-        else if (!am_server && INFO_GTE(NAME, 1) && INFO_EQ(PROGRESS, 1))
-            rprintf(FINFO, "%s\n", fname);
-
-        /* recv file data */
-        recv_ok = receive_data(f1, fnamecmp, fd1, st.st_size,
-                               fname, fd2, F_LENGTH(file));
-
-        log_item(log_code, file, iflags, NULL);
-
-        if (fd1 != -1)
-            close(fd1);
-        if (close(fd2) < 0) {
-            rsyserr(FERROR, errno, "close failed on %s",
-                    full_fname(fnametmp));
-            exit_cleanup(RERR_FILEIO);
-        }
-
-        if ((recv_ok && (!delay_updates || !partialptr)) || inplace) {
-            if (partialptr == fname)
-                partialptr = NULL;
-            if (!finish_transfer(fname, fnametmp, fnamecmp,
-                                 partialptr, file, recv_ok, 1))
-                recv_ok = -1;
-            else if (fnamecmp == partialptr) {
-                do_unlink(partialptr);
-                handle_partial_dir(partialptr, PDIR_DELETE);
-            }
-        } else if (keep_partial && partialptr) {
-            if (!handle_partial_dir(partialptr, PDIR_CREATE)) {
-                rprintf(FERROR,
-                        "Unable to create partial-dir for %s -- discarding %s.\n",
-                        local_name ? local_name : f_name(file, NULL),
-                        recv_ok ? "completed file" : "partial file");
-                do_unlink(fnametmp);
-                recv_ok = -1;
-            } else if (!finish_transfer(partialptr, fnametmp, fnamecmp, NULL,
-                                        file, recv_ok, !partial_dir))
-                recv_ok = -1;
-            else if (delay_updates && recv_ok) {
-                bitbag_set_bit(delayed_bits, ndx);
-                recv_ok = 2;
-            } else
-                partialptr = NULL;
-        } else
-            do_unlink(fnametmp);
-
-        cleanup_disable();
-
-        if (read_batch)
-            file->flags |= FLAG_FILE_SENT;
-
-        switch (recv_ok) {
-            case 2:
-                break;
-            case 1:
-                if (remove_source_files || inc_recurse
-                    || (preserve_hard_links && F_IS_HLINKED(file)))
-                    send_msg_int(MSG_SUCCESS, ndx);
-                break;
-            case 0: {
-                enum logcode msgtype = redoing ? FERROR_XFER : FWARNING;
-                if (msgtype == FERROR_XFER || INFO_GTE(NAME, 1)) {
-                    char *errstr, *redostr, *keptstr;
-                    if (!(keep_partial && partialptr) && !inplace)
-                        keptstr = "discarded";
-                    else if (partial_dir)
-                        keptstr = "put into partial-dir";
-                    else
-                        keptstr = "retained";
-                    if (msgtype == FERROR_XFER) {
-                        errstr = "ERROR";
-                        redostr = "";
-                    } else {
-                        errstr = "WARNING";
-                        redostr = read_batch ? " (may try again)"
-                                             : " (will try again)";
-                    }
-                    rprintf(msgtype,
-                            "%s: %s failed verification -- update %s%s.\n",
-                            errstr, local_name ? f_name(file, NULL) : fname,
-                            keptstr, redostr);
-                }
-                if (!redoing) {
-                    if (read_batch)
-                        flist_ndx_push(&batch_redo_list, ndx);
-                    send_msg_int(MSG_REDO, ndx);
-                    file->flags |= FLAG_FILE_SENT;
-                } else if (inc_recurse)
-                    send_msg_int(MSG_NO_SEND, ndx);
-                break;
-            }
-            case -1:
+                discard_receive_data(f1, F_LENGTH(file));
+                if (fd1 != -1)
+                    close(fd1);
                 if (inc_recurse)
                     send_msg_int(MSG_NO_SEND, ndx);
-                break;
+                continue;
+            }
+
+            /* log the transfer */
+            if (log_before_transfer)
+                log_item(FCLIENT, file, iflags, NULL);
+            else if (!am_server && INFO_GTE(NAME, 1) && INFO_EQ(PROGRESS, 1))
+                rprintf(FINFO, "%s\n", fname);
+
+            /* recv file data */
+            recv_ok = receive_data(f1, fnamecmp, fd1, st.st_size,
+                                   fname, fd2, F_LENGTH(file));
+
+            log_item(log_code, file, iflags, NULL);
+
+            if (fd1 != -1)
+                close(fd1);
+            if (close(fd2) < 0) {
+                rsyserr(FERROR, errno, "close failed on %s",
+                        full_fname(fnametmp));
+                exit_cleanup(RERR_FILEIO);
+            }
+
+            if ((recv_ok && (!delay_updates || !partialptr)) || inplace) {
+                if (partialptr == fname)
+                    partialptr = NULL;
+                if (!finish_transfer(fname, fnametmp, fnamecmp,
+                                     partialptr, file, recv_ok, 1))
+                    recv_ok = -1;
+                else if (fnamecmp == partialptr) {
+                    do_unlink(partialptr);
+                    handle_partial_dir(partialptr, PDIR_DELETE);
+                }
+            } else if (keep_partial && partialptr) {
+                if (!handle_partial_dir(partialptr, PDIR_CREATE)) {
+                    rprintf(FERROR,
+                            "Unable to create partial-dir for %s -- discarding %s.\n",
+                            local_name ? local_name : f_name(file, NULL),
+                            recv_ok ? "completed file" : "partial file");
+                    do_unlink(fnametmp);
+                    recv_ok = -1;
+                } else if (!finish_transfer(partialptr, fnametmp, fnamecmp, NULL,
+                                            file, recv_ok, !partial_dir))
+                    recv_ok = -1;
+                else if (delay_updates && recv_ok) {
+                    bitbag_set_bit(delayed_bits, ndx);
+                    recv_ok = 2;
+                } else
+                    partialptr = NULL;
+            } else
+                do_unlink(fnametmp);
+
+            cleanup_disable();
+
+            if (read_batch)
+                file->flags |= FLAG_FILE_SENT;
+
+            switch (recv_ok) {
+                case 2:
+                    break;
+                case 1:
+                    if (remove_source_files || inc_recurse
+                        || (preserve_hard_links && F_IS_HLINKED(file)))
+                        send_msg_int(MSG_SUCCESS, ndx);
+                    break;
+                case 0: {
+                    enum logcode msgtype = redoing ? FERROR_XFER : FWARNING;
+                    if (msgtype == FERROR_XFER || INFO_GTE(NAME, 1)) {
+                        char *errstr, *redostr, *keptstr;
+                        if (!(keep_partial && partialptr) && !inplace)
+                            keptstr = "discarded";
+                        else if (partial_dir)
+                            keptstr = "put into partial-dir";
+                        else
+                            keptstr = "retained";
+                        if (msgtype == FERROR_XFER) {
+                            errstr = "ERROR";
+                            redostr = "";
+                        } else {
+                            errstr = "WARNING";
+                            redostr = read_batch ? " (may try again)"
+                                                 : " (will try again)";
+                        }
+                        rprintf(msgtype,
+                                "%s: %s failed verification -- update %s%s.\n",
+                                errstr, local_name ? f_name(file, NULL) : fname,
+                                keptstr, redostr);
+                    }
+                    if (!redoing) {
+                        if (read_batch)
+                            flist_ndx_push(&batch_redo_list, ndx);
+                        send_msg_int(MSG_REDO, ndx);
+                        file->flags |= FLAG_FILE_SENT;
+                    } else if (inc_recurse)
+                        send_msg_int(MSG_NO_SEND, ndx);
+                    break;
+                }
+                case -1:
+                    if (inc_recurse)
+                        send_msg_int(MSG_NO_SEND, ndx);
+                    break;
+            }
         }
+        if (make_backups < 0)
+            make_backups = -make_backups;
+
+        if (phase == 2 && delay_updates) /* for protocol_version < 29 */
+            handle_delayed_updates(local_name);
+
+        if (DEBUG_GTE(RECV, 1))
+            rprintf(FINFO, "recv_files finished\n");
+
     }
-    if (make_backups < 0)
-        make_backups = -make_backups;
-
-    if (phase == 2 && delay_updates) /* for protocol_version < 29 */
-        handle_delayed_updates(local_name);
-
-    if (DEBUG_GTE(RECV, 1))
-        rprintf(FINFO,"recv_files finished\n");
-
     return flist;
 }
 
