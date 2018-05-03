@@ -3,11 +3,6 @@
 dummy
 ID
 Makefile.old
-configure.sh
-configure.sh.old
-config.h.in
-config.h.in.old
-aclocal.m4
 /proto.h
 /proto.h-tstamp
 /rsync.1
