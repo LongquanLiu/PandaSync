@@ -2838,13 +2838,15 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	 * part 2 send file data (literal data)*/
 	int fd = -1;
 	struct sum_struct *s;
+    s = new(struct sum_struct);
+    s->sums = NULL;
 	s->count = 0;
 	struct map_struct *mbuf = NULL;
 	char fname[MAXPATHLEN], xname[MAXPATHLEN];
 	const char *path, *slash;
 	uchar fnamecmp_type;
 	int iflags, xlen;
-	int phase = 0, max_phase = protocol_version >= 29 ? 2 : 1;
+	int phase = 1, max_phase = protocol_version >= 29 ? 2 : 1;
 	int itemizing = am_server ? logfile_format_has_i : stdout_format_has_i;
 	enum logcode log_code = log_before_transfer ? FLOG : FINFO;
 	int f_xfer = write_batch < 0 ? batch_fd : f2;
@@ -2859,7 +2861,8 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 			send_extra_file_list(f2, MIN_FILECNT_LOOKAHEAD);
 			extra_flist_sending_enabled = !flist_eof;
 		}
-
+        if (++phase > max_phase)
+            break;
 		if (inc_recurse)
 			send_extra_file_list(f2, MIN_FILECNT_LOOKAHEAD);
 
