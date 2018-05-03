@@ -582,7 +582,7 @@ static pid_t do_cmd(char *cmd, char *machine, char *user, char **remote_argv, in
  * For mode 1, we change into the destination directory and return NULL.
  * For mode 2, we change into the directory containing the destination
  * file (if we aren't already there) and return the local-name. */
-static char *get_local_name(struct file_list *flist, char *dest_path)
+char *get_local_name(struct file_list *flist, char *dest_path)
 {
 	STRUCT_STAT st;
 	int statret;
@@ -717,7 +717,7 @@ static char *get_local_name(struct file_list *flist, char *dest_path)
  * tweak any dest-relative paths to make them work for a dry-run (the
  * destination dir must be in curr_dir[] when this function is called).
  * We also warn about any arg that is non-existent or not a directory. */
-static void check_alt_basis_dirs(void)
+void check_alt_basis_dirs(void)
 {
 	STRUCT_STAT st;
 	char *slash = strrchr(curr_dir, '/');

@@ -230,7 +230,7 @@ int open_tmpfile(char *fnametmp, const char *fname, struct file_struct *file)
 	return fd;
 }
 
-static int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
+int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
 			const char *fname, int fd, OFF_T total_size)
 {
 	static char file_sum1[MAX_DIGEST_LEN];
@@ -402,12 +402,12 @@ static int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
 }
 
 
-static void discard_receive_data(int f_in, OFF_T length)
+void discard_receive_data(int f_in, OFF_T length)
 {
 	receive_data(f_in, NULL, -1, 0, NULL, -1, length);
 }
 
-static void handle_delayed_updates(char *local_name)
+void handle_delayed_updates(char *local_name)
 {
 	char *fname, *partialptr;
 	int ndx;

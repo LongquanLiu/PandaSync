@@ -25,6 +25,7 @@
 #include "rounding.h"
 #include "inums.h"
 #include "io.h"
+
 extern int stdout_format_has_i;
 extern int logfile_format_has_i;
 extern int log_before_transfer;
@@ -55,8 +56,7 @@ static flist_ndx_list batch_redo_list;
 static int updating_basis_or_equiv;
 
 extern int am_receiver;  /* Only set to 1 after the receiver/generator fork. */
-extern int phase;
-extern int redoing ;
+int phase = 0, redoing = 0;
 
 extern int am_root;
 extern int am_server;
@@ -2941,7 +2941,9 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	return flist;
 }
 
-struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[]) {
+struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[])
+{
+
     /* part 1 recv file list */
     const char *good_dirname = NULL;
     struct file_list *flist;
@@ -4323,7 +4325,8 @@ char *f_name(const struct file_struct *f, char *fbuf)
  * of the dirname string, and also indicates that "dirname" is a MAXPATHLEN
  * buffer (the functions we call will append names onto the end, but the old
  * dir value will be restored on exit). */
-struct file_list *get_dirlist(char *dirname, int dlen, int flags) {
+struct file_list *get_dirlist(char *dirname, int dlen, int flags)
+{
     struct file_list *dirlist;
     char dirbuf[MAXPATHLEN];
     int save_recurse = recurse;

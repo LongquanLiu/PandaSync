@@ -1308,3 +1308,11 @@ char *getpass(const char *prompt);
 #ifdef MAINTAINER_MODE
 const char *get_panic_action(void);
 #endif
+
+char *get_local_name(struct file_list *flist, char *dest_path);
+void check_alt_basis_dirs(void);
+
+int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
+                 const char *fname, int fd, OFF_T total_size);
+void handle_delayed_updates(char *local_name);
+void discard_receive_data(int f_in, OFF_T length);
