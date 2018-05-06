@@ -3275,8 +3275,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
         partialptr = partial_dir ? partial_dir_fname(fname) : fname;
         fnamecmp = fname;
-        st.st_mode = 0;
-        st.st_size = 0;
+
         if (fd1 == -1) {
             st.st_mode = 0;
             st.st_size = 0;
@@ -3315,7 +3314,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         if (!preserve_perms) {
             int exists = fd1 != -1;
 
-
+        }
             /* We now check to see if we are writing the file "inplace" */
             if (inplace) {
                 fd2 = do_open(fname, O_WRONLY | O_CREAT, 0600);
