@@ -3438,16 +3438,6 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                     break;
             }
         }
-        if (make_backups < 0)
-            make_backups = -make_backups;
-
-        if (phase == 2 && delay_updates) /* for protocol_version < 29 */
-            handle_delayed_updates(local_name);
-
-        if (DEBUG_GTE(RECV, 1))
-            rprintf(FINFO, "recv_files finished\n");
-
-    }
     if (make_backups < 0)
         make_backups = -make_backups;
 
@@ -3456,6 +3446,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
     if (DEBUG_GTE(RECV, 1))
         rprintf(FINFO,"recv_files finished\n");
+
     return flist;
 }
 
