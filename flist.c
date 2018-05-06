@@ -56,7 +56,7 @@ static flist_ndx_list batch_redo_list;
 static int updating_basis_or_equiv;
 
 extern int am_receiver;  /* Only set to 1 after the receiver/generator fork. */
-int phase = 0, redoing = 0;
+int phase = 1, redoing = 0;
 
 extern int am_root;
 extern int am_server;
@@ -3250,7 +3250,8 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
     while (1) {
         cleanup_disable();
-
+        if (++phase > max_phase)
+            break;
         fname = local_name ? local_name : f_name(file, fbuf);
 
         if (DEBUG_GTE(RECV, 1))
