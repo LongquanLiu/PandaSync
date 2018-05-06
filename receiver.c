@@ -265,6 +265,7 @@ int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
 
     if(whole_file == 1){
         sum.count = 0;
+        sum.remainder = 0;
         sum.sums = NULL;
     }else{
         read_sum_head(f_in, &sum);
@@ -398,7 +399,12 @@ int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
 	if (mapbuf)
 		unmap_file(mapbuf);
 
-	read_buf(f_in, sender_file_sum, sum_len);
+    if(whole_file == 1){
+        sum_len = sum_end(sender_file_sum);
+    }else{
+        read_buf(f_in, sender_file_sum, sum_len);
+    }
+
 	if (DEBUG_GTE(DELTASUM, 2))
 		rprintf(FINFO,"got file_sum\n");
 	if (fd != -1 && memcmp(file_sum1, sender_file_sum, sum_len) != 0)

@@ -371,11 +371,9 @@ void match_sums(int f, struct sum_struct *s, struct map_struct *buf, OFF_T len)
 
 		matched(f, s, buf, len, -1);
 
-		/*file level sums*/
 		sum_len = sum_end(sender_file_sum);
 
-		/*
-		 * If we had a read error, send a bad checksum.  We use all bits
+		/* If we had a read error, send a bad checksum.  We use all bits
          * off as long as the checksum doesn't happen to be that, in
          * which case we turn the last 0 bit into a 1. */
 		if (buf && buf->status != 0) {
