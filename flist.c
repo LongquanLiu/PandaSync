@@ -56,7 +56,7 @@ static flist_ndx_list batch_redo_list;
 static int updating_basis_or_equiv;
 
 extern int am_receiver;  /* Only set to 1 after the receiver/generator fork. */
-int phase = 1, redoing = 0;
+int phase = 0, redoing = 0;
 
 extern int am_root;
 extern int am_server;
