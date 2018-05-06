@@ -1043,7 +1043,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
     if(whole_file == 1){
         flist = recv_file_list_and_file(f_in,f_out,-1,argc,argv);
 
-        io_flush(FULL_FLUSH);
+        /*io_flush(FULL_FLUSH);*/
         handle_stats(f_in);
 
         if (output_needs_newline) {
