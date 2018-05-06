@@ -3274,10 +3274,9 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         remember_initial_stats();
 
         partialptr = partial_dir ? partial_dir_fname(fname) : fname;
-
-
         fnamecmp = fname;
-        
+        st.st_mode = 0;
+        st.st_size = 0;
         if (fd1 == -1) {
             st.st_mode = 0;
             st.st_size = 0;
