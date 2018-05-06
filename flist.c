@@ -3351,7 +3351,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         updating_basis_or_equiv = inplace
                                   && (fnamecmp == fname || fnamecmp_type == FNAMECMP_BACKUP);
 */
-        fd1 == -1;
+        fd1 = -1;
         if (fd1 == -1) {
             st.st_mode = 0;
             st.st_size = 0;
