@@ -3248,7 +3248,6 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         delayed_bits = bitbag_create(flist->used + 1);
 
     while (1) {
-        phase = 1;
         cleanup_disable();
         if (++phase > max_phase)
             break;
@@ -3256,6 +3255,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         fname = local_name ? local_name : f_name(file, fbuf);
 
         if (phase == 2) {
+            break;
             rprintf(FERROR,
                     "got transfer request in phase 2 [%s]\n",
                     who_am_i());
