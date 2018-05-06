@@ -3384,7 +3384,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
             close(fd1);
             fd1 = -1;
         }
-
+        preserve_perms = 0;
         /* If we're not preserving permissions, change the file-list's
          * mode based on the local permissions and some heuristics. */
         if (!preserve_perms) {
