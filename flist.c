@@ -3252,8 +3252,6 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         cleanup_disable();
         if (++phase > max_phase)
             break;
-        write_int(f2, NDX_DONE);
-        continue;
         fname = local_name ? local_name : f_name(file, fbuf);
 
         if (DEBUG_GTE(RECV, 1))
@@ -3276,8 +3274,8 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         remember_initial_stats();
 
         partialptr = partial_dir ? partial_dir_fname(fname) : fname;
-
-        if (protocol_version >= 29) {
+        fnamecmp = fname;
+        /*if (protocol_version >= 29) {
             switch (fnamecmp_type) {
                 case FNAMECMP_FNAME:
                     fnamecmp = fname;
@@ -3319,8 +3317,8 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                 fnamecmp_type = FNAMECMP_FNAME;
             }
         } else {
-            /* Reminder: --inplace && --partial-dir are never
-             * enabled at the same time. */
+            *//* Reminder: --inplace && --partial-dir are never
+             * enabled at the same time. *//*
             if (inplace && make_backups > 0) {
                 if (!(fnamecmp = get_backup_name(fname)))
                     fnamecmp = fname;
@@ -3330,7 +3328,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                 fnamecmp = partialptr;
             else
                 fnamecmp = fname;
-        }
+        }*/
 
         /* open the file */
         fd1 = do_open(fnamecmp, O_RDONLY, 0);
