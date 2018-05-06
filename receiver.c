@@ -263,7 +263,10 @@ int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
 	} else
 		preallocated_len = 0;
 
-    if(whole_file != 1){
+    if(whole_file == 1){
+        sum.count = 0;
+        sum.sums = NULL;
+    }else{
         read_sum_head(f_in, &sum);
     }
 
