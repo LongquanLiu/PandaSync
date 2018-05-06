@@ -1350,7 +1350,6 @@ struct file_struct *make_file(const char *fname, struct file_list *flist,
 	bp += extra_len;
 	file = (struct file_struct *)bp;
 	bp += FILE_STRUCT_LEN;
-
 	memcpy(bp, basename, basename_len);
 
 #ifdef SUPPORT_HARD_LINKS
@@ -3240,7 +3239,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 #ifdef SUPPORT_ACLS
     const char *parent_dirname = "";
 #endif
-    int ndx, recv_ok;
+    int ndx,recv_ok;
 
     if (DEBUG_GTE(RECV, 1))
         rprintf(FINFO, "recv_files(%d) starting\n", flist->used);
@@ -3252,16 +3251,8 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         cleanup_disable();
         if (++phase > max_phase)
             break;
+
         fname = local_name ? local_name : f_name(file, fbuf);
-
-        if (DEBUG_GTE(RECV, 1))
-            rprintf(FINFO, "recv_files(%s)\n", fname);
-
-        if (daemon_filter_list.head && (*fname != '.' || fname[1] != '\0')
-            && check_filter(&daemon_filter_list, FLOG, fname, 0) < 0) {
-            rprintf(FERROR, "attempt to hack rsync failed.\n");
-            exit_cleanup(RERR_PROTOCOL);
-        }
 
         if (phase == 2) {
             rprintf(FERROR,
@@ -3286,24 +3277,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                 send_msg_int(MSG_NO_SEND, ndx);
             continue;
         }
-        if (fd1 != -1 && S_ISDIR(st.st_mode) && fnamecmp == fname) {
-            /* this special handling for directories
-             * wouldn't be necessary if robust_rename()
-             * and the underlying robust_unlink could cope
-             * with directories
-             */
-            rprintf(FERROR_XFER, "recv_files: %s is a directory\n",
-                    full_fname(fnamecmp));
-            discard_receive_data(f1, F_LENGTH(file));
-            close(fd1);
-            if (inc_recurse)
-                send_msg_int(MSG_NO_SEND, ndx);
-            continue;
-        }
-        if (fd1 != -1 && !S_ISREG(st.st_mode)) {
-            close(fd1);
-            fd1 = -1;
-        }
+
         preserve_perms = 0;
         /* If we're not preserving permissions, change the file-list's
          * mode based on the local permissions and some heuristics. */
@@ -3311,8 +3285,8 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
             int exists = fd1 != -1;
         }
         /* We now check to see if we are writing the file "inplace" */
-        if (inplace) {
-            fd2 = do_open(fname, O_WRONLY | O_CREAT, 0600);
+        if (inplace)  {
+            fd2 = do_open(fname, O_WRONLY|O_CREAT, 0600);
             if (fd2 == -1) {
                 rsyserr(FERROR_XFER, errno, "open %s failed",
                         full_fname(fname));
@@ -3332,15 +3306,13 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                 send_msg_int(MSG_NO_SEND, ndx);
             continue;
         }
-
         /* log the transfer */
         if (log_before_transfer)
             log_item(FCLIENT, file, iflags, NULL);
         else if (!am_server && INFO_GTE(NAME, 1) && INFO_EQ(PROGRESS, 1))
             rprintf(FINFO, "%s\n", fname);
 
-        st.st_mode = 0;
-        st.st_size = 0;
+
         /* recv file data */
         recv_ok = receive_data(f1, fnamecmp, fd1, st.st_size,
                                fname, fd2, F_LENGTH(file));

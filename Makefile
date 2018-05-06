@@ -10,7 +10,7 @@ mandir=${datarootdir}/man
 
 LIBS=-lpopt 
 CC=gcc
-CFLAGS=-I./zlib -g -O2 -DHAVE_CONFIG_H -Wall -W
+CFLAGS=-I./zlib -g -O0 -DHAVE_CONFIG_H -Wall -W
 CPPFLAGS=
 EXEEXT=
 LDFLAGS=
