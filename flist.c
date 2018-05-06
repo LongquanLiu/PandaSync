@@ -3180,7 +3180,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         exit_cleanup(RERR_IPC);
     }
 
-    if (backup_dir) {
+    /*if (backup_dir) {
         STRUCT_STAT st;
         int ret;
         if (backup_dir_len > 1)
@@ -3201,7 +3201,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
             rprintf(FINFO, "backup_dir is %s\n", backup_dir_buf);
         if (backup_dir_len > 1)
             backup_dir_buf[backup_dir_len - 1] = '/';
-    }
+    }*/
 
     io_flush(FULL_FLUSH);
 
