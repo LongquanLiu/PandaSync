@@ -263,7 +263,9 @@ int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
 	} else
 		preallocated_len = 0;
 
-	read_sum_head(f_in, &sum);
+    if(whole_file != 1){
+        read_sum_head(f_in, &sum);
+    }
 
 	if (fd_r >= 0 && size_r > 0) {
 		int32 read_size = MAX(sum.blength * 2, 16*1024);
