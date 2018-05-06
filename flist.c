@@ -3331,7 +3331,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         }*/
         fnamecmp = fname;
         /* open the file */
-        fd1 = do_open(fnamecmp, O_RDONLY, 0);
+        /*fd1 = do_open(fnamecmp, O_RDONLY, 0);
 
         if (fd1 == -1 && protocol_version < 29) {
             if (fnamecmp != fname) {
@@ -3340,7 +3340,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
             }
 
             if (fd1 == -1 && basis_dir[0]) {
-                /* pre-29 allowed only one alternate basis */
+                *//* pre-29 allowed only one alternate basis *//*
                 pathjoin(fnamecmpbuf, sizeof fnamecmpbuf,
                          basis_dir[0], fname);
                 fnamecmp = fnamecmpbuf;
@@ -3350,7 +3350,8 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
         updating_basis_or_equiv = inplace
                                   && (fnamecmp == fname || fnamecmp_type == FNAMECMP_BACKUP);
-
+*/
+        fd1 == -1;
         if (fd1 == -1) {
             st.st_mode = 0;
             st.st_size = 0;
