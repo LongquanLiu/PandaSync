@@ -3225,7 +3225,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
     io_start_multiplex_out(f2);
 
     /* part 3 recv files*/
-    int fd1, fd2;
+    int fd1 = -1, fd2;
     STRUCT_STAT st;
     int iflags, xlen;
     char *fname, fbuf[MAXPATHLEN];
@@ -3275,83 +3275,9 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
         partialptr = partial_dir ? partial_dir_fname(fname) : fname;
 
-        /*if (protocol_version >= 29) {
-            switch (fnamecmp_type) {
-                case FNAMECMP_FNAME:
-                    fnamecmp = fname;
-                    break;
-                case FNAMECMP_PARTIAL_DIR:
-                    fnamecmp = partialptr;
-                    break;
-                case FNAMECMP_BACKUP:
-                    fnamecmp = get_backup_name(fname);
-                    break;
-                case FNAMECMP_FUZZY:
-                    if (file->dirname) {
-                        pathjoin(fnamecmpbuf, sizeof fnamecmpbuf, file->dirname, xname);
-                        fnamecmp = fnamecmpbuf;
-                    } else
-                        fnamecmp = xname;
-                    break;
-                default:
-                    if (fnamecmp_type > FNAMECMP_FUZZY && fnamecmp_type - FNAMECMP_FUZZY <= basis_dir_cnt) {
-                        fnamecmp_type -= FNAMECMP_FUZZY + 1;
-                        if (file->dirname) {
-                            stringjoin(fnamecmpbuf, sizeof fnamecmpbuf,
-                                       basis_dir[fnamecmp_type], "/", file->dirname, "/", xname, NULL);
-                        } else
-                            pathjoin(fnamecmpbuf, sizeof fnamecmpbuf, basis_dir[fnamecmp_type], xname);
-                    } else if (fnamecmp_type >= basis_dir_cnt) {
-                        rprintf(FERROR,
-                                "invalid basis_dir index: %d.\n",
-                                fnamecmp_type);
-                        exit_cleanup(RERR_PROTOCOL);
-                    } else
-                        pathjoin(fnamecmpbuf, sizeof fnamecmpbuf, basis_dir[fnamecmp_type], fname);
-                    fnamecmp = fnamecmpbuf;
-                    break;
-            }
-            if (!fnamecmp || (daemon_filter_list.head
-                              && check_filter(&daemon_filter_list, FLOG, fnamecmp, 0) < 0)) {
-                fnamecmp = fname;
-                fnamecmp_type = FNAMECMP_FNAME;
-            }
-        } else {
-           *//*  Reminder: --inplace && --partial-dir are never
-             * enabled at the same time.*//*
-            if (inplace && make_backups > 0) {
-                if (!(fnamecmp = get_backup_name(fname)))
-                    fnamecmp = fname;
-                else
-                    fnamecmp_type = FNAMECMP_BACKUP;
-            } else if (partial_dir && partialptr)
-                fnamecmp = partialptr;
-            else
-                fnamecmp = fname;
-        }*/
+
         fnamecmp = fname;
-        /* open the file */
-        /*fd1 = do_open(fnamecmp, O_RDONLY, 0);
-
-        if (fd1 == -1 && protocol_version < 29) {
-            if (fnamecmp != fname) {
-                fnamecmp = fname;
-                fd1 = do_open(fnamecmp, O_RDONLY, 0);
-            }
-
-            if (fd1 == -1 && basis_dir[0]) {
-                *//* pre-29 allowed only one alternate basis *//*
-                pathjoin(fnamecmpbuf, sizeof fnamecmpbuf,
-                         basis_dir[0], fname);
-                fnamecmp = fnamecmpbuf;
-                fd1 = do_open(fnamecmp, O_RDONLY, 0);
-            }
-        }
-
-        updating_basis_or_equiv = inplace
-                                  && (fnamecmp == fname || fnamecmp_type == FNAMECMP_BACKUP);
-*/
-        fd1 = -1;
+        
         if (fd1 == -1) {
             st.st_mode = 0;
             st.st_size = 0;
