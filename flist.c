@@ -2943,7 +2943,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	return flist;
 }
 
-struct file_list *recv_file_list_and_file(int f1, int * f2, int dir_ndx, int argc, char *argv[])
+struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[])
 {
 
     /* part 1 recv file list */
@@ -3174,11 +3174,6 @@ struct file_list *recv_file_list_and_file(int f1, int * f2, int dir_ndx, int arg
     if (preserve_hard_links && !inc_recurse)
         match_hard_links(first_flist);
 #endif
-    int error_pipe[2];
-    if (fd_pair(error_pipe) < 0) {
-        rsyserr(FERROR, errno, "pipe failed in do_recv");
-        exit_cleanup(RERR_IPC);
-    }
 
     /*if (backup_dir) {
         STRUCT_STAT st;
@@ -3207,17 +3202,7 @@ struct file_list *recv_file_list_and_file(int f1, int * f2, int dir_ndx, int arg
 
     am_receiver = 1;
     send_msgs_to_gen = am_server;
-
-    close(error_pipe[0]);
-
-    /* We can't let two processes write to the socket at one time. */
-    io_end_multiplex_out(MPLX_SWITCHING);
-    if (f1 != f2)
-        close(f2);
-    sock_f_out = -1;
-    f2 = error_pipe[1];
-
-    bwlimit_writemax = 0; /* receiver doesn't need to do this */
+    
 
     if (read_batch)
         io_start_buffering_in(f1);

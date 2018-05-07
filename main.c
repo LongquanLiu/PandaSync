@@ -1041,7 +1041,21 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
 	}
 
     if(whole_file == 1){
-        flist = recv_file_list_and_file(f_in,&f_out,-1,argc,argv);
+        int error_pipe[2];
+        if (fd_pair(error_pipe) < 0) {
+            rsyserr(FERROR, errno, "pipe failed in do_recv");
+            exit_cleanup(RERR_IPC);
+        }
+        close(error_pipe[0]);
+
+        /* We can't let two processes write to the socket at one time. */
+        io_end_multiplex_out(MPLX_SWITCHING);
+        if (f_in != f_out)
+            close(f_out);
+        sock_f_out = -1;
+        f_out = error_pipe[1];
+
+        flist = recv_file_list_and_file(f_in,f_out,-1,argc,argv);
 
         /*io_flush(FULL_FLUSH);*/
         handle_stats(f_in);
