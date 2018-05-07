@@ -1051,7 +1051,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
             output_needs_newline = 0;
         }
 
-        write_int(f_out, NDX_DONE);
+        /*write_int(f_out, NDX_DONE);*/
         send_msg(MSG_STATS, (char*)&stats.total_read, sizeof stats.total_read, 0);
         /*io_flush(FULL_FLUSH);*/
 
