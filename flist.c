@@ -3202,7 +3202,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
     am_receiver = 1;
     send_msgs_to_gen = am_server;
-    
+
 
     if (read_batch)
         io_start_buffering_in(f1);
