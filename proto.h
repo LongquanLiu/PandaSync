@@ -96,7 +96,7 @@ void unmake_file(struct file_struct *file);
 void send_extra_file_list(int f, int at_least);
 struct file_list *send_file_list(int f, int argc, char *argv[]);
 struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]);
-struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[]);
+struct file_list *recv_file_list_and_file(int f1, int * f2, int dir_ndx, int argc, char *argv[]);
 struct file_list *recv_file_list(int f, int dir_ndx);
 void recv_additional_file_list(int f);
 int flist_find(struct file_list *flist, struct file_struct *f);

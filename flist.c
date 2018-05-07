@@ -2943,7 +2943,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	return flist;
 }
 
-struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc, char *argv[])
+struct file_list *recv_file_list_and_file(int f1, int * f2, int dir_ndx, int argc, char *argv[])
 {
 
     /* part 1 recv file list */
@@ -3174,7 +3174,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
     if (preserve_hard_links && !inc_recurse)
         match_hard_links(first_flist);
 #endif
-    int error_pipe[2];  
+    int error_pipe[2];
     if (fd_pair(error_pipe) < 0) {
         rsyserr(FERROR, errno, "pipe failed in do_recv");
         exit_cleanup(RERR_IPC);
