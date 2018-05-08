@@ -1047,9 +1047,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
             exit_cleanup(RERR_IPC);
         }
         close(error_pipe[0]);
-
-        /* We can't let two processes write to the socket at one time. */
-        io_end_multiplex_out(MPLX_SWITCHING);
+        
         if (f_in != f_out)
             close(f_out);
         sock_f_out = -1;
