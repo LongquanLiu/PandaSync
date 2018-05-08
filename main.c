@@ -1059,7 +1059,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
         if (read_batch)
             io_start_buffering_in(f_in);
         io_start_multiplex_out(f_out);
-        
+
         flist = recv_file_list_and_file(f_in,f_out,-1,argc,argv);
 
         io_flush(FULL_FLUSH);

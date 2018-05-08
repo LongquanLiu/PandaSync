@@ -3234,8 +3234,34 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
     while (1) {
         cleanup_disable();
-        if (++phase > max_phase)
-            break;
+
+        ndx = flist->parent_ndx;
+        if (ndx == NDX_DONE) {
+            if (!am_server && INFO_GTE(PROGRESS, 2) && cur_flist) {
+                set_current_file_index(NULL, 0);
+                end_progress(0);
+            }
+            if (inc_recurse && first_flist) {
+                if (read_batch) {
+                    ndx = first_flist->used + first_flist->ndx_start;
+                    gen_wants_ndx(ndx, first_flist->flist_num);
+                }
+                flist_free(first_flist);
+                if (first_flist)
+                    continue;
+            } else if (read_batch && first_flist) {
+                ndx = first_flist->used;
+                gen_wants_ndx(ndx, first_flist->flist_num);
+            }
+            if (++phase > max_phase)
+                break;
+            if (DEBUG_GTE(RECV, 1))
+                rprintf(FINFO, "recv_files phase=%d\n", phase);
+            if (phase == 2 && delay_updates)
+                handle_delayed_updates(local_name);
+            write_int(f2, NDX_DONE);
+            continue;
+        }
 
         fname = local_name ? local_name : f_name(file, fbuf);
 

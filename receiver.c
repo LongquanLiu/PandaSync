@@ -480,7 +480,7 @@ static int we_want_redo(int desired_ndx)
 	return 0;
 }
 
-static int gen_wants_ndx(int desired_ndx, int flist_num)
+int gen_wants_ndx(int desired_ndx, int flist_num)
 {
 	static int next_ndx = -1;
 	static int done_cnt = 0;
