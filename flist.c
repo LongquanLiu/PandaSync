@@ -3234,8 +3234,10 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
     while (1) {
         cleanup_disable();
-
-        ndx = flist->parent_ndx;
+        phase = 1;
+        if (++phase > max_phase)
+            break;
+        /*ndx = flist->parent_ndx;
         if (ndx == NDX_DONE) {
             if (!am_server && INFO_GTE(PROGRESS, 2) && cur_flist) {
                 set_current_file_index(NULL, 0);
@@ -3261,7 +3263,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                 handle_delayed_updates(local_name);
             write_int(f2, NDX_DONE);
             continue;
-        }
+        }*/
 
         fname = local_name ? local_name : f_name(file, fbuf);
 
