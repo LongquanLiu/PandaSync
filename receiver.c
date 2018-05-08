@@ -400,7 +400,8 @@ int receive_data(int f_in, char *fname_r, int fd_r, OFF_T size_r,
 		unmap_file(mapbuf);
 
     if(whole_file == 1){
-
+        // need improve
+        read_buf(f_in, sender_file_sum, sum_len);
     }else{
         read_buf(f_in, sender_file_sum, sum_len);
     }
