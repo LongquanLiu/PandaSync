@@ -3234,9 +3234,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
     while (1) {
         cleanup_disable();
-        phase = 1;
-        if (++phase > max_phase)
-            break;
+
         /*ndx = flist->parent_ndx;
         if (ndx == NDX_DONE) {
             if (!am_server && INFO_GTE(PROGRESS, 2) && cur_flist) {
@@ -3274,6 +3272,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                     who_am_i());
             exit_cleanup(RERR_PROTOCOL);
         }
+
 
         remember_initial_stats();
         partialptr = partial_dir ? partial_dir_fname(fname) : fname;
@@ -3420,6 +3419,10 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
                     send_msg_int(MSG_NO_SEND, ndx);
                 break;
         }
+        phase = 2;
+        if (++phase > max_phase)
+            break;
+
     }
     if (make_backups < 0)
         make_backups = -make_backups;
