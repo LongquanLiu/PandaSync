@@ -2950,6 +2950,8 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 	if (DEBUG_GTE(SEND, 1))
 		rprintf(FINFO, "send files finished\n");
     match_report();
+    write_ndx(f2, NDX_DONE);
+
 	return flist;
 }
 
