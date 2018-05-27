@@ -2934,7 +2934,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 						full_fname(fname));
 			}
 		}
-		close(fd);
+		//close(fd);
 
 		free_sums(s);
 
