@@ -1246,8 +1246,8 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 			finish = clock();
 			printf("finish send_files(third) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
 			handle_stats(-1);
-			if (protocol_version >= 24)
-				read_final_goodbye(f_in, f_out);
+			/*if (protocol_version >= 24)
+				read_final_goodbye(f_in, f_out);*/
 			if (pid != -1) {
 				if (DEBUG_GTE(EXIT, 2))
 					rprintf(FINFO,"client_run waiting on %d\n", (int) pid);
