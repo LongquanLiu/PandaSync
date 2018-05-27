@@ -1078,16 +1078,16 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
         close(error_pipe[0]);
         /* Handle any keep-alive packets from the post-processing work
          * that the generator does. */
-        if (protocol_version >= 29) {
+        /*if (protocol_version >= 29) {
             kluge_around_eof = -1;
 
-            /* This should only get stopped via a USR2 signal. */
+            *//* This should only get stopped via a USR2 signal. *//*
             read_final_goodbye(f_in, f_out);
 
             rprintf(FERROR, "Invalid packet at end of run [%s]\n",
                     who_am_i());
             exit_cleanup(RERR_PROTOCOL);
-        }
+        }*/
 
         /* Finally, we go to sleep until our parent kills us with a
          * USR2 signal.  We sleep for a short time, as on some OSes
