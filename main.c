@@ -1041,6 +1041,27 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
 	}
 
     if(whole_file == 1){
+        int error_pipe[2];
+        io_flush(FULL_FLUSH);
+
+        am_receiver = 1;
+        send_msgs_to_gen = am_server;
+
+
+        if (fd_pair(error_pipe) < 0) {
+            rsyserr(FERROR, errno, "pipe failed in do_recv");
+            exit_cleanup(RERR_IPC);
+        }
+        close(error_pipe[0]);
+
+        /* We can't let two processes write to the socket at one time. */
+        io_end_multiplex_out(MPLX_SWITCHING);
+
+        if (f_in != f_out)
+            close(f_out);
+        sock_f_out = -1;
+        f_out = error_pipe[1];
+
         flist = recv_file_list_and_file(f_in,f_out,-1,argc,argv);
 
         io_flush(FULL_FLUSH);
@@ -1214,17 +1235,12 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 		if(whole_file == 1){
 			flist = send_file_list_and_file(f_in, f_out, argc, argv);
 
-			if (DEBUG_GTE(FLIST, 3))
-				rprintf(FINFO,"file list sent\n");
-
-			if (protocol_version < 31 && filesfrom_host && protocol_version >= 23)
-				io_start_multiplex_in(f_in);
-
 			gettimeofday(&end, NULL);
 			printf("finish_filelist time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
 			finish = clock();
 			printf("finish_filelist CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
 
+            io_flush(FULL_FLUSH);
 			gettimeofday(&end, NULL);
 			printf("finish send_files(third) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
 			finish = clock();

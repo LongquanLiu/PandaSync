@@ -2833,6 +2833,13 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 			rprintf(FINFO, "[%s] flist_eof=1\n", who_am_i());
 	}
 
+    if (DEBUG_GTE(FLIST, 3))
+        rprintf(FINFO,"file list sent\n");
+
+    if (protocol_version < 31 && filesfrom_host && protocol_version >= 23)
+        io_start_multiplex_in(f1);
+
+    io_flush(NORMAL_FLUSH);
 	/*
 	 * part 2 send file data (literal data)*/
 	int fd = -1;
@@ -2857,6 +2864,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 
 	while (1) {
 		if (inc_recurse) {
+            // if the file is a dir also need to send file_list
 			send_extra_file_list(f2, MIN_FILECNT_LOOKAHEAD);
 			extra_flist_sending_enabled = !flist_eof;
 		}
@@ -2871,6 +2879,8 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 		printf("finish receive_sums(second) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
 		finish = clock();
 		printf("finish receive_sums(second) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+
+        maybe_send_keepalive(time(NULL), True);
 
 		fd = do_open(fname, O_RDONLY, 0);
 		if (fd == -1) {
@@ -2939,7 +2949,7 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 
 	if (DEBUG_GTE(SEND, 1))
 		rprintf(FINFO, "send files finished\n");
-
+    match_report();
 	return flist;
 }
 
@@ -3197,26 +3207,6 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         if (backup_dir_len > 1)
             backup_dir_buf[backup_dir_len - 1] = '/';
     }*/
-	int error_pipe[2];
-    io_flush(FULL_FLUSH);
-
-    am_receiver = 1;
-    send_msgs_to_gen = am_server;
-
-
-	if (fd_pair(error_pipe) < 0) {
-		rsyserr(FERROR, errno, "pipe failed in do_recv");
-		exit_cleanup(RERR_IPC);
-	}
-	close(error_pipe[0]);
-
-	/* We can't let two processes write to the socket at one time. */
-	io_end_multiplex_out(MPLX_SWITCHING);
-
-	if (f1 != f2)
-		close(f2);
-	sock_f_out = -1;
-	f2 = error_pipe[1];
 
 	if (read_batch)
 		io_start_buffering_in(f1);
