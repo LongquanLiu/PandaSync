@@ -934,7 +934,7 @@ static int do_recv(int f_in, int f_out, char *local_name)
                 kluge_around_eof = -1;
 
                 /* This should only get stopped via a USR2 signal. */
-             //   read_final_goodbye(f_in, f_out);
+                read_final_goodbye(f_in, f_out);
 
                 rprintf(FERROR, "Invalid packet at end of run [%s]\n",
                         who_am_i());
@@ -1064,7 +1064,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
 
         flist = recv_file_list_and_file(f_in,f_out,-1,argc,argv);
 
-    //    io_flush(FULL_FLUSH);
+        io_flush(FULL_FLUSH);
         handle_stats(f_in);
 
         if (output_needs_newline) {
@@ -1074,7 +1074,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
 
         write_int(f_out, NDX_DONE);
         send_msg(MSG_STATS, (char*)&stats.total_read, sizeof stats.total_read, 0);
-//        io_flush(FULL_FLUSH);
+        io_flush(FULL_FLUSH);
 
         /* Handle any keep-alive packets from the post-processing work
          * that the generator does. */
