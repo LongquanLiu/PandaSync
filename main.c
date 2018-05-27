@@ -934,7 +934,7 @@ static int do_recv(int f_in, int f_out, char *local_name)
                 kluge_around_eof = -1;
 
                 /* This should only get stopped via a USR2 signal. */
-                read_final_goodbye(f_in, f_out);
+             //   read_final_goodbye(f_in, f_out);
 
                 rprintf(FERROR, "Invalid packet at end of run [%s]\n",
                         who_am_i());
