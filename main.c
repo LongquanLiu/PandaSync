@@ -1075,7 +1075,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
         write_int(f_out, NDX_DONE);
         send_msg(MSG_STATS, (char*)&stats.total_read, sizeof stats.total_read, 0);
         io_flush(FULL_FLUSH);
-
+        close(error_pipe[0]);
         /* Handle any keep-alive packets from the post-processing work
          * that the generator does. */
         if (protocol_version >= 29) {
