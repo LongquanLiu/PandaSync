@@ -3377,7 +3377,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 
         if (read_batch)
             file->flags |= FLAG_FILE_SENT;
-
+        ndx = 1;
         switch (recv_ok) {
             case 2:
                 break;
