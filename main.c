@@ -1052,7 +1052,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
             rsyserr(FERROR, errno, "pipe failed in do_recv");
             exit_cleanup(RERR_IPC);
         }
-        close(error_pipe[0]);
+       // close(error_pipe[0]);
 
         /* We can't let two processes write to the socket at one time. */
         io_end_multiplex_out(MPLX_SWITCHING);
