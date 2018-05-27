@@ -3197,18 +3197,32 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         if (backup_dir_len > 1)
             backup_dir_buf[backup_dir_len - 1] = '/';
     }*/
-
+	int error_pipe[2];
     io_flush(FULL_FLUSH);
 
     am_receiver = 1;
     send_msgs_to_gen = am_server;
 
 
-    if (read_batch)
-        io_start_buffering_in(f1);
-    io_start_multiplex_out(f2);
+	if (fd_pair(error_pipe) < 0) {
+		rsyserr(FERROR, errno, "pipe failed in do_recv");
+		exit_cleanup(RERR_IPC);
+	}
+	close(error_pipe[0]);
 
-    /* part 3 recv files*/
+	/* We can't let two processes write to the socket at one time. */
+	io_end_multiplex_out(MPLX_SWITCHING);
+
+	if (f1 != f2)
+		close(f2);
+	sock_f_out = -1;
+	f2 = error_pipe[1];
+
+	if (read_batch)
+		io_start_buffering_in(f1);
+	io_start_multiplex_out(f2);
+
+	/* part 3 recv files*/
     int fd1 = -1, fd2;
     STRUCT_STAT st;
     int iflags, xlen;
