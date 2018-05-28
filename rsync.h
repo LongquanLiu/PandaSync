@@ -335,7 +335,7 @@ enum delret {
 #ifdef TIME_WITH_SYS_TIME
 #include <sys/time.h>
 #include <time.h>
-static clock_t start1, finish;
+/*static clock_t start1, finish;*/
 struct timeval start, end;
 #else
 

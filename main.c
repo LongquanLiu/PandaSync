@@ -1237,15 +1237,16 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 
 			gettimeofday(&end, NULL);
 			printf("finish_filelist time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf("finish_filelist CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
-
+     		/*finish = clock();
+			printf("finish_filelist CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );
+*/
             io_flush(FULL_FLUSH);
 			gettimeofday(&end, NULL);
 			printf("finish send_files(third) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf("finish send_files(third) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
-			handle_stats(-1);
+			/*finish = clock();
+			printf("finish send_files(third) CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );
+			*/
+            handle_stats(-1);
 			/*if (protocol_version >= 24)
 				read_final_goodbye(f_in, f_out);*/
 			if (pid != -1) {
@@ -1258,15 +1259,15 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 			io_flush(FULL_FLUSH);
 			gettimeofday(&end, NULL);
 			printf("finish time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf("finish CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+		/*	finish = clock();
+			printf("finish CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );*/
 			exit_cleanup(exit_code);
 
 		}else{
 			gettimeofday(&end, NULL);
 			printf("before send_file_list(first) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf( "before send_file_list(first) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+			/*finish = clock();
+			printf( "before send_file_list(first) CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );*/
 
 			flist = send_file_list(f_out, argc, argv);
 			if (DEBUG_GTE(FLIST, 3))
@@ -1278,16 +1279,16 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 			io_flush(NORMAL_FLUSH);
 			gettimeofday(&end, NULL);
 			printf("finish_filelist time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf("finish_filelist CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+/*			finish = clock();
+			printf("finish_filelist CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );*/
 
 			send_files(f_in, f_out);
 			io_flush(FULL_FLUSH);
 
 			gettimeofday(&end, NULL);
 			printf("finish send_files(third) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf("finish send_files(third) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+			/*finish = clock();
+			printf("finish send_files(third) CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );*/
 			handle_stats(-1);
 			if (protocol_version >= 24)
 				read_final_goodbye(f_in, f_out);
@@ -1301,8 +1302,8 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 			io_flush(FULL_FLUSH);
 			gettimeofday(&end, NULL);
 			printf("finish time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf("finish CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+/*			finish = clock();
+			printf("finish CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );*/
 			exit_cleanup(exit_code);
 		}
 	}
@@ -1376,9 +1377,10 @@ static int start_client(int argc, char *argv[])
 {
 	gettimeofday(&end, NULL);
 	printf("before start_client time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-	finish = clock(); 
-	printf("before start_client CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
-	char *p, *shell_machine = NULL, *shell_user = NULL;
+	/*finish = clock();
+	printf("before start_client CPU clock time is %f seconds \n ", (double)(1000000 * (finish - start1)) / CLOCKS_PER_SEC );
+	*/
+    char *p, *shell_machine = NULL, *shell_user = NULL;
 	char **remote_argv;
 	int remote_argc;
 	int f_in, f_out;
@@ -1654,7 +1656,7 @@ int main(int argc,char *argv[])
 	printf( "Now start : init start time \n"); 
 	/* 测量一个事件持续的时间*/ 
 	gettimeofday(&start, NULL);
-	start1 = clock(); 
+//	start1 = clock();
 
 	int ret;
 	int orig_argc = argc;

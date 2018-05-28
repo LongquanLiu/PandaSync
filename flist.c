@@ -2848,16 +2848,14 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
     s->sums = NULL;
 	s->count = 0;
 	struct map_struct *mbuf = NULL;
-	char fname[MAXPATHLEN], xname[MAXPATHLEN];
-	const char *path, *slash;
-	uchar fnamecmp_type;
-	int iflags, xlen;
+	char fname[MAXPATHLEN];
+
+	int iflags = 0;
 	int phase = 1, max_phase = protocol_version >= 29 ? 2 : 1;
-	int itemizing = am_server ? logfile_format_has_i : stdout_format_has_i;
-	enum logcode log_code = log_before_transfer ? FLOG : FINFO;
+
 	int f_xfer = write_batch < 0 ? batch_fd : f2;
 	int save_io_error = io_error;
-	int ndx, j;
+	int ndx = 1, j;
 
 	if (DEBUG_GTE(SEND, 1))
 		rprintf(FINFO, "send_files starting\n");
@@ -2875,10 +2873,10 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 
 		f_name(file, fname);
 
-		gettimeofday(&end, NULL);
+		/*gettimeofday(&end, NULL);
 		printf("finish receive_sums(second) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
 		finish = clock();
-		printf("finish receive_sums(second) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+		printf("finish receive_sums(second) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );*/
 
         maybe_send_keepalive(time(NULL), True);
 
@@ -2917,6 +2915,11 @@ struct file_list *send_file_list_and_file(int f1, int f2, int argc, char *argv[]
 			mbuf = map_file(fd, st.st_size, read_size, s->blength);
 		} else
 			mbuf = NULL;
+
+		if (log_before_transfer)
+			log_item(FCLIENT, file, iflags, NULL);
+		else if (!am_server && INFO_GTE(NAME, 1) && INFO_EQ(PROGRESS, 1))
+			rprintf(FCLIENT, "%s\n", fname);
 
 		set_compression(fname);
 		// s - count = NULL
@@ -3127,10 +3130,8 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
     stats.num_files += flist->used;
 
     /* part 2 other task */
-    int exit_code;
-    char *local_name = NULL;
-    int negated_levels;
 
+    char *local_name = NULL;
 
     if (!flist) {
         rprintf(FERROR, "server_recv: recv_file_list error\n");
@@ -3140,8 +3141,7 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
     if (inc_recurse && file_total == 1)
         recv_additional_file_list(f1);
 
-    if (negated_levels)
-        negate_output_levels();
+
 
     if (argc > 0)
         local_name = get_local_name(flist, argv[0]);
@@ -3216,14 +3216,12 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
 	/* part 3 recv files*/
     int fd1 = -1, fd2;
     STRUCT_STAT st;
-    int iflags, xlen;
+    int iflags = 0;
     char *fname, fbuf[MAXPATHLEN];
-    char xname[MAXPATHLEN];
+
     char fnametmp[MAXPATHLEN];
     char *fnamecmp, *partialptr;
-    char fnamecmpbuf[MAXPATHLEN];
-    uchar fnamecmp_type;
-    int itemizing = am_server ? logfile_format_has_i : stdout_format_has_i;
+
     enum logcode log_code = log_before_transfer ? FLOG : FINFO;
     int max_phase = protocol_version >= 29 ? 2 : 1;
 #ifdef SUPPORT_ACLS
@@ -3299,9 +3297,9 @@ struct file_list *recv_file_list_and_file(int f1, int f2, int dir_ndx, int argc,
         preserve_perms = 0;
         /* If we're not preserving permissions, change the file-list's
          * mode based on the local permissions and some heuristics. */
-        if (!preserve_perms) {
+       /* if (!preserve_perms) {
             int exists = fd1 != -1;
-        }
+        }*/
         /* We now check to see if we are writing the file "inplace" */
         if (inplace)  {
             fd2 = do_open(fname, O_WRONLY|O_CREAT, 0600);

@@ -339,8 +339,8 @@ void send_files(int f_in, int f_out)
 
 			gettimeofday(&end, NULL);
 			printf("finish receive_sums(second) time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-			finish = clock();
-			printf("finish receive_sums(second) CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+			//finish = clock();
+			printf("finish receive_sums(second) CPU clock time is %f seconds \n ", (double)(1000000 * (end.tv_sec - start.tv_sec)) / CLOCKS_PER_SEC );
 
 			fd = do_open(fname, O_RDONLY, 0);
 			if (fd == -1) {

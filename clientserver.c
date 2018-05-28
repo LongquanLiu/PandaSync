@@ -105,8 +105,8 @@ int start_socket_client(char *host, int remote_argc, char *remote_argv[],
 {
 	gettimeofday(&end, NULL);
 	printf("before start_socket_client time = %ld us\n", (unsigned long)(1000000 * (end.tv_sec - start.tv_sec) + end.tv_usec - start.tv_usec));
-	finish = clock(); 
-	printf("before start_socket_client CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );
+	/*finish = clock();
+	printf("before start_socket_client CPU clock time is %f seconds \n ", (double)(finish - start1) / CLOCKS_PER_SEC );*/
 
 	int fd, ret;
 	char *p, *user = NULL;
