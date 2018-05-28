@@ -1088,7 +1088,7 @@ static void do_server_recv(int f_in, int f_out, int argc, char *argv[])
                     who_am_i());
             exit_cleanup(RERR_PROTOCOL);
         }*/
-
+        exit_cleanup(RERR_PROTOCOL);
         /* Finally, we go to sleep until our parent kills us with a
          * USR2 signal.  We sleep for a short time, as on some OSes
          * a signal won't interrupt a sleep! */
