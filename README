@@ -11,10 +11,6 @@ sets of files are present at one of the ends of the link beforehand.  At
 first glance this may seem impossible because the calculation of diffs
 between two files normally requires local access to both files.
 
-A technical report describing the rsync algorithm is included with this
-package.
-
-
 SETUP
 -----
 
@@ -23,7 +19,7 @@ It does not need to be setuid and requires no special privileges for
 installation.  You must, however, have a working ssh or rsh system.
 Using ssh is recommended for its security features.
 
-Alternatively, rsync can run in `daemon' mode, listening on a socket.
+Alternatively, pandasync can run in `daemon' mode, listening on a socket.
 This is generally used for public file distribution, although
 authentication and access control are available.
 
@@ -36,10 +32,8 @@ offsets) that your system may support.  Set the environment variable CC
 to the name of your native compiler before running configure in this
 case.
 
-Once built put a copy of rsync in your search path on the local and
+Once built put a copy of pandasync in your search path on the local and
 remote systems (or use "make install").  That's it!
-
-
 
 GIT REPOSITORY
 --------------
@@ -48,14 +42,6 @@ If you want to get the very latest version of PandaSync direct from the
 source code repository then you can use git:
 
     git clone https://github.com/LongquanLiu/PandaSync
-
-USAGE
------
-
-Basically you use pandasync just like scp, but pandasync has many additional
-options.  To get a complete list of supported options type:
-
-    rsync --help
 
 See the manpage for more detailed information.
 
