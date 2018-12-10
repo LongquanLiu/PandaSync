@@ -1,39 +1,26 @@
 WHAT IS PandaSync?
 --------------
 
-PandaSync is a fast and extraordinarily versatile file copying tool for
-both remote and local files.
+PandaSync is a fast file copying tool for both remote and local files.
 
-PandaSync uses a delta-transfer algorithm which provides a very fast method
-for bringing remote files into sync.  It does this by sending just the
-differences in the files across the link, without requiring that both
-sets of files are present at one of the ends of the link beforehand.  At
-first glance this may seem impossible because the calculation of diffs
-between two files normally requires local access to both files.
+PandaSync can choose the sync strategy basic on the network situation and needed sync file size.
+uses a full-transfer algorithm which privides a very fast method for small file; uses a delta-transfer algorithm which provides a very fast method for bringing remote files into sync.  It does this by sending just the
+differences in the files across the link, without requiring that both sets of files are present at one of the ends of the link beforehand.  At
+first glance this may seem impossible because the calculation of diffs between two files normally requires local access to both files.
 
 SETUP
 -----
 
 Pandasync normally uses ssh or rsh for communication with remote systems.
-It does not need to be setuid and requires no special privileges for
-installation.  You must, however, have a working ssh or rsh system.
+It does not need to be setuid and requires no special privileges for installation.  You must, however, have a working ssh or rsh system.
 Using ssh is recommended for its security features.
 
 Alternatively, pandasync can run in `daemon' mode, listening on a socket.
-This is generally used for public file distribution, although
-authentication and access control are available.
+This is generally used for public file distribution, although authentication and access control are available.
 
-To install Pandasync, first run the "configure" script.  This will create a
-Makefile and config.h appropriate for your system.  Then type "make".
+To install Pandasync, first run the "configure" script.  This will create a Makefile and config.h appropriate for your system.  Then type "make".
 
-Note that on some systems you will have to force configure not to use
-gcc because gcc may not support some features (such as 64 bit file
-offsets) that your system may support.  Set the environment variable CC
-to the name of your native compiler before running configure in this
-case.
-
-Once built put a copy of pandasync in your search path on the local and
-remote systems (or use "make install").  That's it!
+Once built put a copy of pandasync in your search path on the local and remote systems (or use "make install").  That's it!
 
 GIT REPOSITORY
 --------------
