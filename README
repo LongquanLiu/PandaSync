@@ -1,26 +1,20 @@
 WHAT IS PandaSync?
 --------------
     
-    It's a hybrid cloud sync scheme, PandaSync, that combines full sync and delta sync dynamically 
-    based on file size and network conditions.
-    
-    To further improve small-file sync performance, we propose an optimization, Full2Sync, 
-    that merges the connection establishment request with the file-sending request 
-    to reduce the number of network round-trips between the client and the cloud servers.
-    
+    It's a hybrid cloud sync scheme, PandaSync, that combines full sync and delta sync dynamically based on file size and network conditions.
+    To further improve small-file sync performance, we propose an optimization, Full2Sync, that merges the connection establishment request with the file-sending request 
+to reduce the number of network round-trips between the client and the cloud servers.
     PandaSync can be turned off and switched to either Full Sync scheme or Delta Sync scheme to provide much better flexibility.
-    PandaSync has three main functional modules: File Size Monitor, Network-aware Dynamic Threshold and Sync Method Selector. 
-    The Network-aware Dynamic Threshold module is responsible for determining the size threshold between large files and small files 
-    based on the network performance which is detailed in the next subsection. 
-    Upon the initiation of a sync operation, 
-    the File Size Monitor first fetches the information regarding the size of the file and calculates the checksum values. 
-    This information is sent and gathered in the Sync Method Selector module which chooses an appreciate sync method 
-    between full sync and delta sync.
+It has three main functional modules: File Size Monitor, Network-aware Dynamic Threshold and Sync Method Selector. The Network-aware 
+Dynamic Threshold module is responsible for determining the size threshold between large files and small files based on the network 
+performance which is detailed in the next subsection. 
+    Upon the initiation of a sync operation, the File Size Monitor first fetches the information regarding the size of the file 
+and calculates the checksum values. This information is sent and gathered in the Sync Method Selector module which chooses an appreciate 
+sync method between full sync and delta sync.
 
 --------------
 
-If you want to get the very latest version of PandaSync direct from the
-source code repository then you can use git:
+If you want to get the very latest version of PandaSync direct from thesource code repository then you can use git:
 
     git clone https://github.com/LongquanLiu/PandaSync
 
