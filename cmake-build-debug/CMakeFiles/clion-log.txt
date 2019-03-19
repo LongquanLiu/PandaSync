@@ -1,1 +1,11 @@
-CMakeLists.txt not found in /home/llq/cloud/rsync/rsync-3.1.3
+E:\CLion\CMake\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" E:\Dropbox\Coding\pandasync
+-- The C compiler identification is GNU 6.3.0
+-- Check for working C compiler: E:/CLion/MinGW/bin/gcc.exe
+-- Check for working C compiler: E:/CLion/MinGW/bin/gcc.exe -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Configuring done
+-- Generating done
+-- Build files have been written to: E:/Dropbox/Coding/pandasync/cmake-build-debug

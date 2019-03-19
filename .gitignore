@@ -1,5 +1,8 @@
 *.[oa]
 *~
+CMake*
+cmake*
+.idea*
 dummy
 ID
 Makefile.old
