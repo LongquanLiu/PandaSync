@@ -75,6 +75,9 @@ static void build_hash_table(struct sum_struct *s)
 	if (tablesize == TRADITIONAL_TABLESIZE) {
 		for (i = 0; i < s->count; i++) {
 			uint32 t = SUM2HASH(s->sums[i].sum1);
+			/* s->sums[i].sum1 is the 32bit checksum of the No i chunk
+			 * (t)SUM2HASH is calcuate the 16bit hash value map the 32bit checksum
+			 * */
 			s->sums[i].chain = hash_table[t];
 			hash_table[t] = i;
 		}
@@ -116,6 +119,9 @@ static void matched(int f, struct sum_struct *s, struct map_struct *buf,
 	}
 
 	send_token(f, i, buf, last_match, n, i < 0 ? 0 : s->sums[i].len);
+	/* i > 0, mean i is the match token, n is the block length, s->sums[i].len is tokenlen
+	 * i < 0, mean mismatch, last_match + n(no match data length, tokenlen is 0)
+	 * */
 	data_transfer += n;
 
 	if (i >= 0) {
@@ -157,20 +163,29 @@ static void hash_search(int f,struct sum_struct *s,
 			(long)s->blength, big_num(len));
 	}
 
-	k = (int32)MIN(len, (OFF_T)s->blength);
+	k = (int32)MIN(len, (OFF_T)s->blength); /* block_length */
 
-	map = (schar *)map_ptr(buf, 0, k);
+    map = (schar *)map_ptr(buf, 0, k);
+    /* map is slide the read window in the file, base the offset, block_length
+     * map is the block_length buffer of new file(client side)*/
 
 	sum = get_checksum1((char *)map, k);
+	/* sum is the first block 32 bit checksum of the new file(client) */
 	s1 = sum & 0xFFFF;
 	s2 = sum >> 16;
+	/* sum is 2^32 bit;
+	 * s1 is back 2^16; s2 is forward 2^16
+	 * s2 is the first block hash_table Number of the new file*/
 	if (DEBUG_GTE(DELTASUM, 3))
 		rprintf(FINFO, "sum=%.8x k=%ld\n", sum, (long)k);
 
 	offset = aligned_offset = aligned_i = 0;
 
 	end = len + 1 - s->sums[s->count-1].len;
-
+    /* len is the Length of the file to send(client). eg:102528(new);   102400(old)
+     * s->sums[s->count-1].len is the last block length of the old file(server) 200(old_remainder)
+     * end is 102329,last block begin;
+     * */
 	if (DEBUG_GTE(DELTASUM, 3)) {
 		rprintf(FINFO, "hash search s->blength=%ld len=%s count=%s\n",
 			(long)s->blength, big_num(len), big_num(s->count));
@@ -188,9 +203,14 @@ static void hash_search(int f,struct sum_struct *s,
 
 		if (tablesize == TRADITIONAL_TABLESIZE) {
 			hash_entry = SUM2HASH2(s1,s2);
+			/*hash_entry is the new file 16bit hash value
+			 * hash_entry = (s1 + s2) & 0xFFFF*/
 			if ((i = hash_table[hash_entry]) < 0)
+                /* if(hash_table[hash_entry] > 0)  i = hash_table[hash_entry] is the chunk Number
+                 * else mismatch*/
 				goto null_hash;
 			sum = (s1 & 0xffff) | (s2 << 16);
+			/* sum is the 32bit checksum of the new file chunk*/
 		} else {
 			sum = (s1 & 0xffff) | (s2 << 16);
 			hash_entry = BIG_SUM2HASH(sum);
@@ -200,6 +220,7 @@ static void hash_search(int f,struct sum_struct *s,
 		prev = &hash_table[hash_entry];
 
 		hash_hits++;
+		/*hash hit into the loop, unless nullhash:*/
 		do {
 			int32 l;
 
@@ -214,6 +235,7 @@ static void hash_search(int f,struct sum_struct *s,
 			prev = &s->sums[i].chain;
 
 			if (sum != s->sums[i].sum1)
+			    /* 32bit rolling checksum mis match*/
 				continue;
 
 			/* also make sure the two blocks are the same length */
@@ -229,11 +251,14 @@ static void hash_search(int f,struct sum_struct *s,
 
 			if (!done_csum2) {
 				map = (schar *)map_ptr(buf,offset,l);
+                /* slide the read window in the file, base the offset, block_length
+                 * map is (offset+l) length buffer of new file(client side) l is the new block length*/
 				get_checksum2((char *)map,l,sum2);
 				done_csum2 = 1;
 			}
 
 			if (memcmp(sum2,s->sums[i].sum2,s->s2length) != 0) {
+                /* 128bit checksum mis match*/
 				false_alarms++;
 				continue;
 			}
@@ -242,7 +267,8 @@ static void hash_search(int f,struct sum_struct *s,
 			 * one with an identical offset, so we prefer that over
 			 * the adjacent want_i optimization. */
 			if (updating_basis_file) {
-				/* All the generator's chunks start at blength boundaries. */
+				/* fix-sized chunking
+				 * All the generator's chunks start at blength boundaries. */
 				while (aligned_offset < offset) {
 					aligned_offset += s->blength;
 					aligned_i++;
@@ -280,6 +306,7 @@ static void hash_search(int f,struct sum_struct *s,
 					}
 					/* This identical chunk is in the same spot in the old and new file. */
 					s->sums[i].flags |= SUMFLG_SAME_OFFSET;
+					/*s->sums[i].flags is 1  match*/
 					want_i = i;
 				}
 			}
@@ -299,7 +326,10 @@ static void hash_search(int f,struct sum_struct *s,
 			want_i = i + 1;
 
 			matched(f,s,buf,offset,i);
+			/*Transmit a literal and/or match token. offset = i = 0
+			 * Transmit chunk 0*/
 			offset += s->sums[i].len - 1;
+			/*offset add a block length*/
 			k = (int32)MIN((OFF_T)s->blength, len-offset);
 			map = (schar *)map_ptr(buf, offset, k);
 			sum = get_checksum1((char *)map, k);
@@ -310,6 +340,7 @@ static void hash_search(int f,struct sum_struct *s,
 		} while ((i = s->sums[i].chain) >= 0);
 
 	  null_hash:
+	    /* mismatch deal--slide search method*/
 		backup = (int32)(offset - last_match);
 		/* We sometimes read 1 byte prior to last_match... */
 		if (backup < 0)
@@ -317,6 +348,7 @@ static void hash_search(int f,struct sum_struct *s,
 
 		/* Trim off the first byte from the checksum */
 		more = offset + k < len;
+		/*k < len is boolean, true is 1, false is 0*/
 		map = (schar *)map_ptr(buf, offset - backup, k + more + backup)
 		    + backup;
 		s1 -= map[0] + CHAR_OFFSET;
@@ -338,6 +370,7 @@ static void hash_search(int f,struct sum_struct *s,
 		if (backup >= s->blength+CHUNK_SIZE && end-offset > CHUNK_SIZE)
 			matched(f, s, buf, offset - s->blength, -2);
 	} while (++offset < end);
+	/* offset is range from 0~end-1(new file len-lastblock_length) */
 
 	matched(f, s, buf, len, -1);
 	map_ptr(buf, len-1, 1);

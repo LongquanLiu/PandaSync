@@ -33,9 +33,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57270fab-91c6-4025-b631-399f6f8b563f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/clion-log.txt" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/clion-log.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/match.c" beforeDir="false" afterPath="$PROJECT_DIR$/match.c" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -57,17 +55,17 @@
       <file leaf-file-name="checksum.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/checksum.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="321">
-              <caret line="105" column="4" selection-start-line="105" selection-end-line="105" selection-end-column="6" />
+            <state relative-caret-position="189">
+              <caret line="105" column="7" selection-start-line="105" selection-start-column="7" selection-end-line="105" selection-end-column="7" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="rsync.h" pinned="false" current-in-tab="true">
+      <file leaf-file-name="rsync.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rsync.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="387">
-              <caret line="847" column="2" lean-forward="true" selection-start-line="847" selection-start-column="2" selection-end-line="847" selection-end-column="2" />
+            <state relative-caret-position="189">
+              <caret line="137" column="18" selection-start-line="137" selection-start-column="8" selection-end-line="137" selection-end-column="18" />
               <folding>
                 <element signature="e#16320#16350#0" expanded="true" />
               </folding>
@@ -84,11 +82,29 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="match.c" pinned="false" current-in-tab="false">
+      <file leaf-file-name="match.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/match.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="140" column="45" selection-start-line="140" selection-start-column="37" selection-end-line="140" selection-end-column="47" />
+            <state relative-caret-position="189">
+              <caret line="33" column="11" selection-start-line="33" selection-start-column="11" selection-end-line="33" selection-end-column="11" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="token.c" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/token.c">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="221">
+              <caret line="632" column="29" selection-start-line="632" selection-start-column="23" selection-end-line="632" selection-end-column="29" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="fileio.c" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/fileio.c">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="131">
+              <caret line="231" selection-start-line="231" selection-end-line="231" selection-end-column="39" />
             </state>
           </provider>
         </entry>
@@ -119,6 +135,7 @@
         <option value="$PROJECT_DIR$/main.c" />
         <option value="$PROJECT_DIR$/checksum.c" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/match.c" />
       </list>
     </option>
   </component>
@@ -131,8 +148,8 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="OCFindUsagesOptions" text="false" ivars="false" properties="true" derivedClasses="false" />
+  <component name="ProjectFrameBounds" extendedState="7">
     <option name="x" value="-204" />
     <option name="y" value="-17" />
     <option name="width" value="1855" />
@@ -197,24 +214,25 @@
       <workItem from="1522053522286" duration="4340000" />
       <workItem from="1522116122843" duration="11713000" />
       <workItem from="1552354484788" duration="4763000" />
-      <workItem from="1552878286134" duration="4978000" />
+      <workItem from="1552878286134" duration="29645000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="26020000" />
+    <option name="totallyTimeSpent" value="50687000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="7" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49837488" visible="true" weight="0.24427083" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49757674" visible="true" weight="0.24427083" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="CMake" order="7" weight="0.20476706" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
+      <window_info anchor="bottom" id="Find" order="1" visible="true" weight="0.32936078" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info id="Structure" order="1" sideWeight="0.5016251" side_tool="true" visible="true" weight="0.24427083" />
+      <window_info active="true" id="Structure" order="1" sideWeight="0.5024233" side_tool="true" visible="true" weight="0.24427083" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
@@ -227,7 +245,6 @@
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="TeamCity" order="7" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info active="true" anchor="bottom" id="Find" order="1" visible="true" weight="0.32936078" />
       <window_info anchor="bottom" id="Messages" order="7" weight="0.32936078" />
     </layout>
   </component>
@@ -395,11 +412,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/options.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8925" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/stunnel-rsyncd.conf">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -413,11 +425,6 @@
     <entry file="file://$PROJECT_DIR$/testsuite/backup.test">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-11" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/flist.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3570" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/backup.c">
@@ -471,13 +478,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/checksum.c">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="321">
-          <caret line="105" column="4" selection-start-line="105" selection-end-line="105" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/OLDNEWS">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="849">
@@ -485,20 +485,69 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/match.c">
+    <entry file="file://$PROJECT_DIR$/fileio.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="140" column="45" selection-start-line="140" selection-start-column="37" selection-end-line="140" selection-end-column="47" />
+        <state relative-caret-position="131">
+          <caret line="231" selection-start-line="231" selection-end-line="231" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/flist.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="1328" column="8" selection-start-line="1328" selection-start-column="8" selection-end-line="1328" selection-end-column="8" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/options.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="144">
+          <caret line="959" column="51" lean-forward="true" selection-start-line="959" selection-start-column="45" selection-end-line="959" selection-end-column="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/t_stub.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="299">
+          <caret line="23" column="6" lean-forward="true" selection-start-line="23" selection-start-column="4" selection-end-line="23" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/sender.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="290">
+          <caret line="43" column="16" lean-forward="true" selection-start-line="43" selection-start-column="11" selection-end-line="43" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/token.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="632" column="29" selection-start-line="632" selection-start-column="23" selection-end-line="632" selection-end-column="29" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/rsync.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="387">
-          <caret line="847" column="2" lean-forward="true" selection-start-line="847" selection-start-column="2" selection-end-line="847" selection-end-column="2" />
+        <state relative-caret-position="189">
+          <caret line="137" column="18" selection-start-line="137" selection-start-column="8" selection-end-line="137" selection-end-column="18" />
           <folding>
             <element signature="e#16320#16350#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/checksum.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="105" column="7" selection-start-line="105" selection-start-column="7" selection-end-line="105" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/match.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="33" column="11" selection-start-line="33" selection-start-column="11" selection-end-line="33" selection-end-column="11" />
         </state>
       </provider>
     </entry>
