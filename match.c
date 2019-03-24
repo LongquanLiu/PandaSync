@@ -19,7 +19,7 @@
  * with this program; if not, visit the http://fsf.org website.
  */
 
-#include <rpcndr.h>
+
 #include "rsync.h"
 #include "inums.h"
 extern int whole_file;
