@@ -1,16 +1,16 @@
 # Makefile for rsync. This is processed by configure to produce the final
 # Makefile
 
-prefix=/usr/local/rsync
+prefix=/usr/local
 datarootdir=${prefix}/share
 exec_prefix=${prefix}
 stunnel4=stunnel
 bindir=${exec_prefix}/bin
 mandir=${datarootdir}/man
 
-LIBS=-lpopt 
+LIBS=
 CC=gcc
-CFLAGS=-I./zlib -g -O0 -DHAVE_CONFIG_H -Wall -W
+CFLAGS=-I./zlib -I./popt -g -O0 -DHAVE_CONFIG_H -Wall -W
 CPPFLAGS=
 EXEEXT=
 LDFLAGS=
@@ -44,9 +44,9 @@ OBJS3=progress.o pipe.o
 DAEMON_OBJ = params.o loadparm.o clientserver.o access.o connection.o authenticate.o
 popt_OBJS=popt/findme.o  popt/popt.o  popt/poptconfig.o \
 	popt/popthelp.o popt/poptparse.o
-OBJS=$(OBJS1) $(OBJS2) $(OBJS3) $(DAEMON_OBJ) $(LIBOBJ) $(zlib_OBJS) 
+OBJS=$(OBJS1) $(OBJS2) $(OBJS3) $(DAEMON_OBJ) $(LIBOBJ) $(zlib_OBJS) $(popt_OBJS)
 
-TLS_OBJ = tls.o syscall.o lib/compat.o lib/snprintf.o lib/permstring.o lib/sysxattrs.o 
+TLS_OBJ = tls.o syscall.o lib/compat.o lib/snprintf.o lib/permstring.o lib/sysxattrs.o $(popt_OBJS)
 
 # Programs we must have to run the test cases
 CHECK_PROGS = rsync$(EXEEXT) tls$(EXEEXT) getgroups$(EXEEXT) getfsdev$(EXEEXT) \
@@ -281,8 +281,8 @@ check30: all $(CHECK_PROGS) $(CHECK_SYMLINKS)
 	rsync_bin=`pwd`/rsync$(EXEEXT) $(srcdir)/runtests.sh --protocol=30
 
 wildtest.o: wildtest.c lib/wildmatch.c rsync.h config.h
-wildtest$(EXEEXT): wildtest.o lib/compat.o lib/snprintf.o 
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ wildtest.o lib/compat.o lib/snprintf.o  $(LIBS)
+wildtest$(EXEEXT): wildtest.o lib/compat.o lib/snprintf.o $(popt_OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ wildtest.o lib/compat.o lib/snprintf.o $(popt_OBJS) $(LIBS)
 
 testsuite/chown-fake.test:
 	ln -s chown.test $(srcdir)/testsuite/chown-fake.test
