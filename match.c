@@ -152,7 +152,7 @@ static OFF_T backward_last_match;
 static void backwardMatched(int f, struct sum_struct *s, struct map_struct *buf,
                     OFF_T offset, int32 i)
 {
-    int32 n = (int32)(backward_last_match - offset + s->sums[i].len); /* max value: block_size (int32) */
+    int32 n = (int32)(backward_last_match - offset - s->sums[i].len); /* max value: block_size (int32) */
     int32 j;
 
     if (DEBUG_GTE(DELTASUM, 2) && i >= 0) {
@@ -460,7 +460,7 @@ static void  hash_search(int f,struct sum_struct *s,
 
                     backwardMatched(f,s,buf,backward_offset - 1, j);
                     /*Transmit a literal and/or match token.
-                     * offset = 12873, i = 15, Transmit match token No.5,(12872 13312]
+                     * offset = 12873, j = 14, Transmit match token No.14,(12872 13312]
                      * */
                     backward_offset -= s->sums[j-1].len;
                     /*offset cut a block length 12873,12173*/
