@@ -32,7 +32,7 @@ char sender_file_sum[MAX_DIGEST_LEN];
 
 static int false_alarms;
 static int hash_hits;
-static int hash_HitOrNo;
+static int forward_enough;
 static int matches;
 static int64 data_transfer;
 
@@ -151,7 +151,7 @@ static void matched(int f, struct sum_struct *s, struct map_struct *buf,
 static void  hash_search(int f,struct sum_struct *s,
 			struct map_struct *buf, OFF_T len)
 {
-	OFF_T offset, end;
+	OFF_T forward_offset,backward_offset, forward_end, backward_end;
 	int32 k ;
 	char sum2[SUM_LENGTH];
 	uint32 s1, s2, sum;
@@ -162,6 +162,8 @@ static void  hash_search(int f,struct sum_struct *s,
 			(long)s->blength, big_num(len));
 	}
 
+	/* forward search
+	 * */
 	k = (int32)MIN(len, (OFF_T)s->blength); /* block_length */
 
     map = (schar *)map_ptr(buf, 0, k);
@@ -178,10 +180,10 @@ static void  hash_search(int f,struct sum_struct *s,
 	if (DEBUG_GTE(DELTASUM, 3))
 		rprintf(FINFO, "sum=%.8x k=%ld\n", sum, (long)k);
 
-	offset = 0;
+    forward_offset = 0;
 
 
-	end = len + 1 - s->sums[s->count-1].len;
+    forward_end = len + 1 - s->sums[s->count-1].len;
     /* len is the Length of the file to send(client). eg:13312(new);   10240(old)
      * s->sums[s->count-1].len is the last block length of the old file(server) 440(old_remainder)
      * end is 12873(13312-440+1),last block begin;
@@ -198,7 +200,7 @@ static void  hash_search(int f,struct sum_struct *s,
 
 		if (DEBUG_GTE(DELTASUM, 4)) {
 			rprintf(FINFO, "offset=%s sum=%04x%04x\n",
-				big_num(offset), s2 & 0xFFFF, s1 & 0xFFFF);
+				big_num(forward_offset), s2 & 0xFFFF, s1 & 0xFFFF);
 		}
 
 		if (tablesize == TRADITIONAL_TABLESIZE) {
@@ -223,18 +225,18 @@ static void  hash_search(int f,struct sum_struct *s,
                     break;
 
                 /* also make sure the two blocks are the same length */
-                l = (int32)MIN((OFF_T)s->blength, len-offset);
+                l = (int32)MIN((OFF_T)s->blength, len-forward_offset);
                 if (l != s->sums[i].len)
                     break;
 
                 if (DEBUG_GTE(DELTASUM, 3)) {
                     rprintf(FINFO,
                             "potential match at %s i=%ld sum=%08x\n",
-                            big_num(offset), (long)i, sum);
+                            big_num(forward_offset), (long)i, sum);
                 }
 
                 if (!done_csum2) {
-                    map = (schar *)map_ptr(buf,offset,l);
+                    map = (schar *)map_ptr(buf,forward_offset,l);
                     /* slide the read window in the file, base the offset, block_length
                      * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
                     get_checksum2((char *)map,l,sum2);
@@ -247,15 +249,15 @@ static void  hash_search(int f,struct sum_struct *s,
                     break;
                 }
 
-                matched(f,s,buf,offset,i);
+                matched(f,s,buf,forward_offset,i);
                 /*Transmit a literal and/or match token.
                  * offset = i = 0, Transmit match token No.0,(0 700]
                  * offset = 700, i = 1, Transmit match token No.1,(700 1400]
                  * */
-                offset += s->sums[i].len - 1;
+                forward_offset += s->sums[i].len - 1;
                 /*offset add a block length 0,699*/
-                k = (int32)MIN((OFF_T)s->blength, len-offset);
-                map = (schar *)map_ptr(buf, offset+1, k);
+                k = (int32)MIN((OFF_T)s->blength, len-forward_offset);
+                map = (schar *)map_ptr(buf, forward_offset + 1, k);
                 /* map = (offset+1,offset+1+K] 701~1400 offset = 699, k = 700*/
                 sum = get_checksum1((char *)map, k);
                 s1 = sum & 0xFFFF;
@@ -281,18 +283,18 @@ static void  hash_search(int f,struct sum_struct *s,
                     break;
 
                 /* also make sure the two blocks are the same length */
-                l = (int32)MIN((OFF_T)s->blength, len-offset);
+                l = (int32)MIN((OFF_T)s->blength, len-forward_offset);
                 if (l != s->sums[i].len)
                     break;
 
                 if (DEBUG_GTE(DELTASUM, 3)) {
                     rprintf(FINFO,
                             "potential match at %s i=%ld sum=%08x\n",
-                            big_num(offset), (long)i, sum);
+                            big_num(forward_offset), (long)i, sum);
                 }
 
                 if (!done_csum2) {
-                    map = (schar *)map_ptr(buf,offset,l);
+                    map = (schar *)map_ptr(buf,forward_offset,l);
                     /* slide the read window in the file, base the offset, block_length
                      * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
                     get_checksum2((char *)map,l,sum2);
@@ -305,15 +307,15 @@ static void  hash_search(int f,struct sum_struct *s,
                     break;
                 }
 
-                matched(f,s,buf,offset,i);
+                matched(f,s,buf,forward_offset,i);
                 /*Transmit a literal and/or match token.
                  * offset = i = 0, Transmit match token No.0,(0 700]
                  * offset = 700, i = 1, Transmit match token No.1,(700 1400]
                  * */
-                offset += s->sums[i].len - 1;
+                forward_offset += s->sums[i].len - 1;
                 /*offset add a block length 0,699*/
-                k = (int32)MIN((OFF_T)s->blength, len-offset);
-                map = (schar *)map_ptr(buf, offset+1, k);
+                k = (int32)MIN((OFF_T)s->blength, len-forward_offset);
+                map = (schar *)map_ptr(buf, forward_offset + 1, k);
                 /* map = (offset+1,offset+1+K] 701~1400 offset = 699, k = 700*/
                 sum = get_checksum1((char *)map, k);
                 s1 = sum & 0xFFFF;
@@ -321,9 +323,177 @@ static void  hash_search(int f,struct sum_struct *s,
                 matches++;
             }
 		}
-
-	} while (++offset < end);
+	} while (++forward_offset < forward_end);
 	/* offset is range from 0~end-1(new file len-lastblock_length) */
+
+    if(forward_offset >= forward_end){
+        forward_enough = 1;
+    }
+    /* backward search
+     * */
+    if(forward_enough == 0){
+
+        k = (int32)MIN(len-forward_offset, (OFF_T)s->remainder); /* k = 440 */
+
+        backward_offset = len - (k - 1);        /*12873*/
+
+        map = (schar *)map_ptr(buf, backward_offset - 1, k);
+        /* map is slide the read window in the file, base the offset, block_length
+         * (12872,13312]*/
+
+        sum = get_checksum1((char *)map, k);
+        /* sum is the first block 32 bit checksum of the new file(client) */
+        s1 = sum & 0xFFFF;
+        s2 = sum >> 16;
+        /* sum is 2^32 bit;
+         * s1 is back 2^16; s2 is forward 2^16
+         * s2 is the first block hash_table Number of the new file*/
+        if (DEBUG_GTE(DELTASUM, 3))
+            rprintf(FINFO, "sum=%.8x k=%ld\n", sum, (long)k);
+
+
+        backward_end = forward_offset;
+        /* eg: backward_end = 4900
+         * */
+        if (DEBUG_GTE(DELTASUM, 3)) {
+            rprintf(FINFO, "hash search s->blength=%ld len=%s count=%s\n",
+                    (long)s->blength, big_num(len), big_num(s->count));
+        }
+
+        do {
+            int done_csum2 = 0;
+            uint32 hash_entry;
+            int32 j, *prev;
+
+            if (DEBUG_GTE(DELTASUM, 4)) {
+                rprintf(FINFO, "offset=%s sum=%04x%04x\n",
+                        big_num(backward_offset), s2 & 0xFFFF, s1 & 0xFFFF);
+            }
+
+            if (tablesize == TRADITIONAL_TABLESIZE) {
+                hash_entry = SUM2HASH2(s1,s2);
+                /*hash_entry is the new file 16bit hash value
+                 * hash_entry = (s1 + s2) & 0xFFFF*/
+                if ((j = hash_table[hash_entry]) < 0){
+                    /* if(hash_table[hash_entry] > 0)  i = hash_table[hash_entry] is the chunk Number
+                     * else mismatch*/
+                    break;
+
+                }else{
+                    sum = (s1 & 0xffff) | (s2 << 16);
+                    /* sum is the 32bit checksum of the new file chunk*/
+                    hash_hits++;
+                    /*hash hit into the loop, unless nullhash:*/
+
+                    int32 l;
+
+                    if (sum != s->sums[j].sum1)
+                        /* 32bit rolling checksum mis match*/
+                        break;
+
+                    /* also make sure the two blocks are the same length */
+                    l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k - 1)-forward_offset);
+                    if (l != s->sums[j].len)
+                        break;
+
+                    if (DEBUG_GTE(DELTASUM, 3)) {
+                        rprintf(FINFO,
+                                "potential match at %s i=%ld sum=%08x\n",
+                                big_num(backward_offset), (long)j, sum);
+                    }
+
+                    if (!done_csum2) {
+                        map = (schar *)map_ptr(buf,backward_offset - 1, l);
+                        /* slide the read window in the file, base the offset, block_length
+                         * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
+                        get_checksum2((char *)map,l,sum2);
+                        done_csum2 = 1;
+                    }
+
+                    if (memcmp(sum2,s->sums[j].sum2,s->s2length) != 0) {
+                        /* 128bit checksum mis match*/
+                        false_alarms++;
+                        break;
+                    }
+
+                    matched(f,s,buf,backward_offset - 1, j);
+                    /*Transmit a literal and/or match token.
+                     * offset = 12873, i = 15, Transmit match token No.5,(12872 13312]
+                     * */
+                    backward_offset -= s->sums[j-1].len;
+                    /*offset cut a block length 12873,12173*/
+                    k = (int32)MIN((OFF_T)s->blength, (backward_offset + k - 1)-forward_offset);
+                    map = (schar *)map_ptr(buf, backward_offset - 1, k);
+                    /* map = (offset-1,offset-1+K]
+                     * offset = 12173, k = 700 (12172,12872]*/
+                    sum = get_checksum1((char *)map, k);
+                    s1 = sum & 0xFFFF;
+                    s2 = sum >> 16;
+                    matches++;
+                }
+
+            } else {
+                sum = (s1 & 0xffff) | (s2 << 16);
+                hash_entry = BIG_SUM2HASH(sum);
+                if ((j = hash_table[hash_entry]) < 0){
+                    break;
+                }else{
+                    sum = (s1 & 0xffff) | (s2 << 16);
+                    /* sum is the 32bit checksum of the new file chunk*/
+                    hash_hits++;
+                    /*hash hit into the loop, unless nullhash:*/
+
+                    int32 l;
+
+                    if (sum != s->sums[j].sum1)
+                        /* 32bit rolling checksum mis match*/
+                        break;
+
+                    /* also make sure the two blocks are the same length */
+                    l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k - 1)-forward_offset);
+                    if (l != s->sums[j].len)
+                        break;
+
+                    if (DEBUG_GTE(DELTASUM, 3)) {
+                        rprintf(FINFO,
+                                "potential match at %s i=%ld sum=%08x\n",
+                                big_num(backward_offset), (long)j, sum);
+                    }
+
+                    if (!done_csum2) {
+                        map = (schar *)map_ptr(buf,backward_offset - 1, l);
+                        /* slide the read window in the file, base the offset, block_length
+                         * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
+                        get_checksum2((char *)map,l,sum2);
+                        done_csum2 = 1;
+                    }
+
+                    if (memcmp(sum2,s->sums[j].sum2,s->s2length) != 0) {
+                        /* 128bit checksum mis match*/
+                        false_alarms++;
+                        break;
+                    }
+
+                    matched(f,s,buf,backward_offset - 1, j);
+                    /*Transmit a literal and/or match token.
+                     * offset = 12873, i = 15, Transmit match token No.5,(12872 13312]
+                     * */
+                    backward_offset -= s->sums[j-1].len;
+                    /*offset cut a block length 12873,12173*/
+                    k = (int32)MIN((OFF_T)s->blength, (backward_offset + k - 1)-forward_offset);
+                    map = (schar *)map_ptr(buf, backward_offset - 1, k);
+                    /* map = (offset-1,offset-1+K]
+                     * offset = 12173, k = 700 (12172,12872]*/
+                    sum = get_checksum1((char *)map, k);
+                    s1 = sum & 0xFFFF;
+                    s2 = sum >> 16;
+                    matches++;
+                }
+            }
+        } while (--backward_offset >= backward_end);
+        /* offset is range from  backward_end(forward_offset)~(len-remainder)*/
+
+    }
 
 	matched(f, s, buf, len, -1);
 	map_ptr(buf, len-1, 1);
@@ -633,7 +803,7 @@ void match_sums(int f, struct sum_struct *s, struct map_struct *buf, OFF_T len)
 		hash_hits = 0;
 		matches = 0;
 		data_transfer = 0;
-        hash_HitOrNo = 0;
+        forward_enough = 0;
 
 		sum_init(xfersum_type, checksum_seed);
 
