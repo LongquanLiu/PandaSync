@@ -238,7 +238,7 @@ static void  hash_search(int f,struct sum_struct *s,
 	do {
 		int done_csum2 = 0;
 		uint32 hash_entry;
-		int32 i, *prev;
+		int32 i;
 
 		if (DEBUG_GTE(DELTASUM, 4)) {
 			rprintf(FINFO, "offset=%s sum=%04x%04x\n",

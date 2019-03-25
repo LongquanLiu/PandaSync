@@ -94,8 +94,8 @@
       <file leaf-file-name="match.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/match.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="466">
-              <caret line="544" lean-forward="true" selection-start-line="544" selection-end-line="544" />
+            <state relative-caret-position="298">
+              <caret line="244" column="47" selection-start-line="244" selection-start-column="47" selection-end-line="244" selection-end-column="47" />
               <folding>
                 <element signature="e#824#842#0" expanded="true" />
                 <element signature="e#22479#22547#0" />
@@ -137,6 +137,7 @@
       <find>srcdir</find>
       <find>proto</find>
       <find>main</find>
+      <find>prev</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -227,12 +228,12 @@
       <workItem from="1522053522286" duration="4340000" />
       <workItem from="1522116122843" duration="11713000" />
       <workItem from="1552354484788" duration="4763000" />
-      <workItem from="1552878286134" duration="59512000" />
+      <workItem from="1552878286134" duration="60512000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="80554000" />
+    <option name="totallyTimeSpent" value="81554000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -568,8 +569,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/match.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="466">
-          <caret line="544" lean-forward="true" selection-start-line="544" selection-end-line="544" />
+        <state relative-caret-position="298">
+          <caret line="244" column="47" selection-start-line="244" selection-start-column="47" selection-end-line="244" selection-end-column="47" />
           <folding>
             <element signature="e#824#842#0" expanded="true" />
             <element signature="e#22479#22547#0" />
