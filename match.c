@@ -538,9 +538,11 @@ static void  hash_search(int f,struct sum_struct *s,
         } while (backward_offset >= backward_end);
         /* offset is range from  backward_end(forward_offset)~(len-remainder)*/
 
+        matched(f, s, buf, backward_last_match, -1);
+    }else{
+        matched(f, s, buf, len, -1);
     }
 
-	matched(f, s, buf, len, -1);
 	map_ptr(buf, len-1, 1);
 }
 
