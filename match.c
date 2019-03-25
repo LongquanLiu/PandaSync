@@ -377,9 +377,9 @@ static void  hash_search(int f,struct sum_struct *s,
 
         k = (int32)MIN(len-forward_offset, (OFF_T)s->remainder); /* k = 440 */
 
-        backward_offset = len - (k - 1);        /*12873*/
+        backward_offset = len - k;        /*12872*/
 
-        map = (schar *)map_ptr(buf, backward_offset - 1, k);
+        map = (schar *)map_ptr(buf, backward_offset, k);
         /* map is slide the read window in the file, base the offset, block_length
          * (12872,13312]*/
 
@@ -434,7 +434,7 @@ static void  hash_search(int f,struct sum_struct *s,
                         break;
 
                     /* also make sure the two blocks are the same length */
-                    l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k - 1)-forward_offset);
+                    l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k)-forward_offset);
                     if (l != s->sums[j].len)
                         break;
 
@@ -455,16 +455,22 @@ static void  hash_search(int f,struct sum_struct *s,
                         break;
                     }
 
-                    backwardMatched(f,s,buf,backward_offset - 1, j);
+                    backwardMatched(f,s,buf,backward_offset, j);
                     /*Transmit a literal and/or match token.
-                     * offset = 12873, j = 14, Transmit match token No.14,(12872 13312]
+                     * offset = 12872, j = 14, Transmit match token No.14,(12872 13312]
+                     * offset = 12172, j = 13, Transmit match token No.13,(12172 12872]
+                     * offset = 11472, j = 12, Transmit match token No.13,(11472 12172]
+                     * ...
                      * */
                     backward_offset -= s->sums[j-1].len;
-                    /*offset cut a block length 12873,12173*/
-                    k = (int32)MIN((OFF_T)s->blength, (backward_offset + k - 1)-forward_offset);
-                    map = (schar *)map_ptr(buf, backward_offset - 1, k);
-                    /* map = (offset-1,offset-1+K]
-                     * offset = 12173, k = 700 (12172,12872]*/
+                    /*offset cut a block length 12872,12172,11472,10772*/
+                    k = (int32)MIN((OFF_T)s->blength, (backward_offset + k)-forward_offset);
+                    map = (schar *)map_ptr(buf, backward_offset, k);
+                    /* map = (offset,offset+K]
+                     * offset = 12172, k = 700 (12172,12872]
+                     * offset = 11472, k = 700 (11472,12172]
+                     * offset = 10772, k = 700 (10772,11472]
+                     * */
                     sum = get_checksum1((char *)map, k);
                     s1 = sum & 0xFFFF;
                     s2 = sum >> 16;
@@ -529,7 +535,7 @@ static void  hash_search(int f,struct sum_struct *s,
                     matches++;
                 }
             }
-        } while (--backward_offset >= backward_end);
+        } while (backward_offset >= backward_end);
         /* offset is range from  backward_end(forward_offset)~(len-remainder)*/
 
     }
