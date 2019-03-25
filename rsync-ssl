@@ -9,4 +9,4 @@ case "$@" in
     exit 1
     ;;
 esac
-exec /usr/local/rsync/bin/rsync --rsh=/usr/local/rsync/bin/stunnel-rsync "${@}"
+exec /usr/local/bin/rsync --rsh=/usr/local/bin/stunnel-rsync "${@}"

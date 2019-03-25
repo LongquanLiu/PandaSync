@@ -221,7 +221,7 @@
 /* #undef HAVE_LIBNSL_S */
 
 /* Define to 1 if you have the `popt' library (-lpopt). */
-#define HAVE_LIBPOPT 1
+/* #undef HAVE_LIBPOPT */
 
 /* Define to 1 if you have the `resolv' library (-lresolv). */
 /* #undef HAVE_LIBRESOLV */
@@ -328,7 +328,7 @@
 #define HAVE_PID_T 1
 
 /* Define to 1 if you have the <popt.h> header file. */
-#define HAVE_POPT_H 1
+/* #undef HAVE_POPT_H */
 
 /* Define to 1 if you have the <popt/popt.h> header file. */
 /* #undef HAVE_POPT_POPT_H */
@@ -601,7 +601,7 @@
 #define ICONV_OPTION NULL
 
 /* true if you have IPv6 */
-/* #undef INET6 */
+#define INET6 1
 
 /* Define to 1 if `major', `minor', and `makedev' are declared in <mkdev.h>.
    */
