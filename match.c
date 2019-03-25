@@ -445,9 +445,6 @@ static void  hash_search(int f,struct sum_struct *s,
                     }
 
                     if (!done_csum2) {
-                        map = (schar *)map_ptr(buf,backward_offset - 1, l);
-                        /* slide the read window in the file, base the offset, block_length
-                         * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
                         get_checksum2((char *)map,l,sum2);
                         done_csum2 = 1;
                     }
