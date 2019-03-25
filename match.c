@@ -148,6 +148,47 @@ static void matched(int f, struct sum_struct *s, struct map_struct *buf,
 }
 
 
+static OFF_T backward_last_match;
+static void backwardMatched(int f, struct sum_struct *s, struct map_struct *buf,
+                    OFF_T offset, int32 i)
+{
+    int32 n = (int32)(backward_last_match - offset + s->sums[i].len); /* max value: block_size (int32) */
+    int32 j;
+
+    if (DEBUG_GTE(DELTASUM, 2) && i >= 0) {
+        rprintf(FINFO,
+                "match at %s backward_last_match=%s j=%d len=%ld n=%ld\n",
+                big_num(offset), big_num(backward_last_match), i,
+                (long)s->sums[i].len, (long)n);
+    }
+
+    send_token(f, i, buf, backward_last_match - s->sums[i].len, n, i < 0 ? 0 : s->sums[i].len);
+    /* n mean this time need data_transfer, match is 0, else is..
+     * i > 0, mean i is the match token, last_match + s->sums[i].len is i chunk length == n;
+     * i < 0, mean mismatch, last_match + n(all n is mismatch data)
+     * */
+    data_transfer += n;
+    /*total data_transfer*/
+
+    if (i >= 0) {
+        stats.matched_data += s->sums[i].len;
+        n += s->sums[i].len;
+    }
+
+    for (j = 0; j < n; j += CHUNK_SIZE) {
+        int32 n1 = MIN(CHUNK_SIZE, n - j);
+        sum_update(map_ptr(buf, backward_last_match - s->sums[i].len + j, n1), n1);
+    }
+
+    if (i >= 0)
+        backward_last_match = offset;
+    else
+        backward_last_match = offset + s->sums[i].len;
+
+    if (buf && INFO_GTE(PROGRESS, 1))
+        show_progress(backward_last_match, buf->file_size);
+}
+
 static void  hash_search(int f,struct sum_struct *s,
 			struct map_struct *buf, OFF_T len)
 {
@@ -157,7 +198,7 @@ static void  hash_search(int f,struct sum_struct *s,
 	uint32 s1, s2, sum;
 	schar *map;
 
-	
+
 	if (DEBUG_GTE(DELTASUM, 2)) {
 		rprintf(FINFO, "hash search b=%ld len=%s\n",
 			(long)s->blength, big_num(len));
@@ -417,7 +458,7 @@ static void  hash_search(int f,struct sum_struct *s,
                         break;
                     }
 
-                    matched(f,s,buf,backward_offset - 1, j);
+                    backwardMatched(f,s,buf,backward_offset - 1, j);
                     /*Transmit a literal and/or match token.
                      * offset = 12873, i = 15, Transmit match token No.5,(12872 13312]
                      * */
@@ -475,7 +516,7 @@ static void  hash_search(int f,struct sum_struct *s,
                         break;
                     }
 
-                    matched(f,s,buf,backward_offset - 1, j);
+                    backwardMatched(f,s,buf,backward_offset - 1, j);
                     /*Transmit a literal and/or match token.
                      * offset = 12873, i = 15, Transmit match token No.5,(12872 13312]
                      * */
@@ -805,6 +846,7 @@ void match_sums(int f, struct sum_struct *s, struct map_struct *buf, OFF_T len)
 		matches = 0;
 		data_transfer = 0;
         forward_enough = 0;
+        backward_last_match = len;
 
 		sum_init(xfersum_type, checksum_seed);
 

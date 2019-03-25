@@ -33,7 +33,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="57270fab-91c6-4025-b631-399f6f8b563f" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/match.c" beforeDir="false" afterPath="$PROJECT_DIR$/match.c" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -94,8 +94,8 @@
       <file leaf-file-name="match.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/match.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="373">
-              <caret line="159" column="4" selection-start-line="159" selection-start-column="4" selection-end-line="159" selection-end-column="4" />
+            <state relative-caret-position="381">
+              <caret line="158" column="22" lean-forward="true" selection-start-line="158" selection-start-column="22" selection-end-line="158" selection-end-column="22" />
               <folding>
                 <element signature="e#824#842#0" expanded="true" />
                 <element signature="e#22479#22547#0" />
@@ -227,12 +227,12 @@
       <workItem from="1522053522286" duration="4340000" />
       <workItem from="1522116122843" duration="11713000" />
       <workItem from="1552354484788" duration="4763000" />
-      <workItem from="1552878286134" duration="54282000" />
+      <workItem from="1552878286134" duration="55521000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="75324000" />
+    <option name="totallyTimeSpent" value="76563000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -568,8 +568,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/match.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="373">
-          <caret line="159" column="4" selection-start-line="159" selection-start-column="4" selection-end-line="159" selection-end-column="4" />
+        <state relative-caret-position="381">
+          <caret line="158" column="22" lean-forward="true" selection-start-line="158" selection-start-column="22" selection-end-line="158" selection-end-column="22" />
           <folding>
             <element signature="e#824#842#0" expanded="true" />
             <element signature="e#22479#22547#0" />
