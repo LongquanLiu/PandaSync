@@ -157,6 +157,7 @@ static void  hash_search(int f,struct sum_struct *s,
 	uint32 s1, s2, sum;
 	schar *map;
 
+	
 	if (DEBUG_GTE(DELTASUM, 2)) {
 		rprintf(FINFO, "hash search b=%ld len=%s\n",
 			(long)s->blength, big_num(len));
