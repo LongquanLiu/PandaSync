@@ -37,6 +37,7 @@ static int64 data_transfer;
 static int total_false_alarms;
 static int total_hash_hits;
 static int total_matches;
+static long total_compareTime;
 
 extern struct stats stats;
 
@@ -147,6 +148,7 @@ static void hash_search(int f,struct sum_struct *s,
 	uint32 s1, s2, sum;
 	int more;
 	schar *map;
+    total_compareTime = 0;
 
 	/* want_i is used to encourage adjacent matches, allowing the RLL
 	 * coding of the output to work more efficiently. */
@@ -188,6 +190,7 @@ static void hash_search(int f,struct sum_struct *s,
 
 		if (tablesize == TRADITIONAL_TABLESIZE) {
 			hash_entry = SUM2HASH2(s1,s2);
+            total_compareTime++;
 			if ((i = hash_table[hash_entry]) < 0)
 				goto null_hash;
 			sum = (s1 & 0xffff) | (s2 << 16);
@@ -338,7 +341,7 @@ static void hash_search(int f,struct sum_struct *s,
 		if (backup >= s->blength+CHUNK_SIZE && end-offset > CHUNK_SIZE)
 			matched(f, s, buf, offset - s->blength, -2);
 	} while (++offset < end);
-
+    printf("total compare Times: %ld \n ", total_compareTime);
 	matched(f, s, buf, len, -1);
 	map_ptr(buf, len-1, 1);
 }
