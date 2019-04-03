@@ -260,51 +260,55 @@ static void  hash_search(int f,struct sum_struct *s,
                 hash_hits++;
                 /*hash hit into the loop, unless nullhash:*/
 
-                int32 l;
+                do {
+                    int32 l;
 
-                if (sum != s->sums[i].sum1)
-                    /* 32bit rolling checksum mis match*/
+                    if (sum != s->sums[i].sum1)
+                        /* 32bit rolling checksum mis match*/
+                        continue;
+
+                    /* also make sure the two blocks are the same length */
+                    l = (int32)MIN((OFF_T)s->blength, len-forward_offset);
+                    if (l != s->sums[i].len)
+                        continue;
+
+                    if (DEBUG_GTE(DELTASUM, 3)) {
+                        rprintf(FINFO,
+                                "potential match at %s i=%ld sum=%08x\n",
+                                big_num(forward_offset), (long)i, sum);
+                    }
+
+                    if (!done_csum2) {
+                        map = (schar *)map_ptr(buf,forward_offset,l);
+                        /* slide the read window in the file, base the offset, block_length
+                         * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
+                        get_checksum2((char *)map,l,sum2);
+                        done_csum2 = 1;
+                    }
+
+                    if (memcmp(sum2,s->sums[i].sum2,s->s2length) != 0) {
+                        /* 128bit checksum mis match*/
+                        false_alarms++;
+                        continue;
+                    }
+
+                    matched(f,s,buf,forward_offset,i);
+                    /*Transmit a literal and/or match token.
+                     * offset = i = 0, Transmit match token No.0,(0 700]
+                     * offset = 700, i = 1, Transmit match token No.1,(700 1400]
+                     * */
+                    forward_offset += s->sums[i].len - 1;
+                    /*offset add a block length 0,699*/
+                    k = (int32)MIN((OFF_T)s->blength, len-forward_offset);
+                    map = (schar *)map_ptr(buf, forward_offset + 1, k);
+                    /* map = (offset+1,offset+1+K] 701~1400 offset = 699, k = 700*/
+                    sum = get_checksum1((char *)map, k);
+                    s1 = sum & 0xFFFF;
+                    s2 = sum >> 16;
+                    matches++;
                     break;
-
-                /* also make sure the two blocks are the same length */
-                l = (int32)MIN((OFF_T)s->blength, len-forward_offset);
-                if (l != s->sums[i].len)
-                    break;
-
-                if (DEBUG_GTE(DELTASUM, 3)) {
-                    rprintf(FINFO,
-                            "potential match at %s i=%ld sum=%08x\n",
-                            big_num(forward_offset), (long)i, sum);
-                }
-
-                if (!done_csum2) {
-                    map = (schar *)map_ptr(buf,forward_offset,l);
-                    /* slide the read window in the file, base the offset, block_length
-                     * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
-                    get_checksum2((char *)map,l,sum2);
-                    done_csum2 = 1;
-                }
-
-                if (memcmp(sum2,s->sums[i].sum2,s->s2length) != 0) {
-                    /* 128bit checksum mis match*/
-                    false_alarms++;
-                    break;
-                }
-
-                matched(f,s,buf,forward_offset,i);
-                /*Transmit a literal and/or match token.
-                 * offset = i = 0, Transmit match token No.0,(0 700]
-                 * offset = 700, i = 1, Transmit match token No.1,(700 1400]
-                 * */
-                forward_offset += s->sums[i].len - 1;
-                /*offset add a block length 0,699*/
-                k = (int32)MIN((OFF_T)s->blength, len-forward_offset);
-                map = (schar *)map_ptr(buf, forward_offset + 1, k);
-                /* map = (offset+1,offset+1+K] 701~1400 offset = 699, k = 700*/
-                sum = get_checksum1((char *)map, k);
-                s1 = sum & 0xFFFF;
-                s2 = sum >> 16;
-                matches++;
+                }while((i = s->sums[i].chain) >= 0);
+                // deal with the hash-table collision
 			}
 
 		} else {
@@ -318,51 +322,55 @@ static void  hash_search(int f,struct sum_struct *s,
                 hash_hits++;
                 /*hash hit into the loop, unless nullhash:*/
 
-                int32 l;
+                do {
+                    int32 l;
 
-                if (sum != s->sums[i].sum1)
-                    /* 32bit rolling checksum mis match*/
+                    if (sum != s->sums[i].sum1)
+                        /* 32bit rolling checksum mis match*/
+                        continue;
+
+                    /* also make sure the two blocks are the same length */
+                    l = (int32)MIN((OFF_T)s->blength, len-forward_offset);
+                    if (l != s->sums[i].len)
+                        continue;
+
+                    if (DEBUG_GTE(DELTASUM, 3)) {
+                        rprintf(FINFO,
+                                "potential match at %s i=%ld sum=%08x\n",
+                                big_num(forward_offset), (long)i, sum);
+                    }
+
+                    if (!done_csum2) {
+                        map = (schar *)map_ptr(buf,forward_offset,l);
+                        /* slide the read window in the file, base the offset, block_length
+                         * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
+                        get_checksum2((char *)map,l,sum2);
+                        done_csum2 = 1;
+                    }
+
+                    if (memcmp(sum2,s->sums[i].sum2,s->s2length) != 0) {
+                        /* 128bit checksum mis match*/
+                        false_alarms++;
+                        continue;
+                    }
+
+                    matched(f,s,buf,forward_offset,i);
+                    /*Transmit a literal and/or match token.
+                     * offset = i = 0, Transmit match token No.0,(0 700]
+                     * offset = 700, i = 1, Transmit match token No.1,(700 1400]
+                     * */
+                    forward_offset += s->sums[i].len - 1;
+                    /*offset add a block length 0,699*/
+                    k = (int32)MIN((OFF_T)s->blength, len-forward_offset);
+                    map = (schar *)map_ptr(buf, forward_offset + 1, k);
+                    /* map = (offset+1,offset+1+K] 701~1400 offset = 699, k = 700*/
+                    sum = get_checksum1((char *)map, k);
+                    s1 = sum & 0xFFFF;
+                    s2 = sum >> 16;
+                    matches++;
                     break;
-
-                /* also make sure the two blocks are the same length */
-                l = (int32)MIN((OFF_T)s->blength, len-forward_offset);
-                if (l != s->sums[i].len)
-                    break;
-
-                if (DEBUG_GTE(DELTASUM, 3)) {
-                    rprintf(FINFO,
-                            "potential match at %s i=%ld sum=%08x\n",
-                            big_num(forward_offset), (long)i, sum);
-                }
-
-                if (!done_csum2) {
-                    map = (schar *)map_ptr(buf,forward_offset,l);
-                    /* slide the read window in the file, base the offset, block_length
-                     * map is (offset,offset+l] length buffer of new file(client side) l is the new block length*/
-                    get_checksum2((char *)map,l,sum2);
-                    done_csum2 = 1;
-                }
-
-                if (memcmp(sum2,s->sums[i].sum2,s->s2length) != 0) {
-                    /* 128bit checksum mis match*/
-                    false_alarms++;
-                    break;
-                }
-
-                matched(f,s,buf,forward_offset,i);
-                /*Transmit a literal and/or match token.
-                 * offset = i = 0, Transmit match token No.0,(0 700]
-                 * offset = 700, i = 1, Transmit match token No.1,(700 1400]
-                 * */
-                forward_offset += s->sums[i].len - 1;
-                /*offset add a block length 0,699*/
-                k = (int32)MIN((OFF_T)s->blength, len-forward_offset);
-                map = (schar *)map_ptr(buf, forward_offset + 1, k);
-                /* map = (offset+1,offset+1+K] 701~1400 offset = 699, k = 700*/
-                sum = get_checksum1((char *)map, k);
-                s1 = sum & 0xFFFF;
-                s2 = sum >> 16;
-                matches++;
+                }while((i = s->sums[i].chain) >= 0);
+                // deal with the hash-table collision
             }
 		}
 	} while (++forward_offset < forward_end);
@@ -427,54 +435,60 @@ static void  hash_search(int f,struct sum_struct *s,
                     hash_hits++;
                     /*hash hit into the loop, unless nullhash:*/
 
-                    int32 l;
+                    do{
 
-                    if (sum != s->sums[j].sum1)
-                        /* 32bit rolling checksum mis match*/
+                        int32 l;
+
+                        if (sum != s->sums[j].sum1)
+                            /* 32bit rolling checksum mis match*/
+                            continue;
+
+                        /* also make sure the two blocks are the same length */
+                        l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k)-forward_offset);
+                        if (l != s->sums[j].len)
+                            continue;
+
+                        if (DEBUG_GTE(DELTASUM, 3)) {
+                            rprintf(FINFO,
+                                    "potential match at %s i=%ld sum=%08x\n",
+                                    big_num(backward_offset), (long)j, sum);
+                        }
+
+                        if (!done_csum2) {
+                            get_checksum2((char *)map,l,sum2);
+                            done_csum2 = 1;
+                        }
+
+                        if (memcmp(sum2,s->sums[j].sum2,s->s2length) != 0) {
+                            /* 128bit checksum mis match*/
+                            false_alarms++;
+                            continue;
+                        }
+
+                        backwardMatched(f,s,buf,backward_offset, j);
+                        /*Transmit a literal and/or match token.
+                         * offset = 12872, j = 14, Transmit match token No.14,(12872 13312]
+                         * offset = 12172, j = 13, Transmit match token No.13,(12172 12872]
+                         * offset = 11472, j = 12, Transmit match token No.13,(11472 12172]
+                         * ...
+                         * */
+                        backward_offset -= s->sums[j-1].len;
+                        /*offset cut a block length 12872,12172,11472,10772*/
+                        k = (int32)MIN((OFF_T)s->blength, (backward_offset + k)-forward_offset);
+                        map = (schar *)map_ptr(buf, backward_offset, k);
+                        /* map = (offset,offset+K]
+                         * offset = 12172, k = 700 (12172,12872]
+                         * offset = 11472, k = 700 (11472,12172]
+                         * offset = 10772, k = 700 (10772,11472]
+                         * */
+                        sum = get_checksum1((char *)map, k);
+                        s1 = sum & 0xFFFF;
+                        s2 = sum >> 16;
+                        matches++;
                         break;
 
-                    /* also make sure the two blocks are the same length */
-                    l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k)-forward_offset);
-                    if (l != s->sums[j].len)
-                        break;
-
-                    if (DEBUG_GTE(DELTASUM, 3)) {
-                        rprintf(FINFO,
-                                "potential match at %s i=%ld sum=%08x\n",
-                                big_num(backward_offset), (long)j, sum);
-                    }
-
-                    if (!done_csum2) {
-                        get_checksum2((char *)map,l,sum2);
-                        done_csum2 = 1;
-                    }
-
-                    if (memcmp(sum2,s->sums[j].sum2,s->s2length) != 0) {
-                        /* 128bit checksum mis match*/
-                        false_alarms++;
-                        break;
-                    }
-
-                    backwardMatched(f,s,buf,backward_offset, j);
-                    /*Transmit a literal and/or match token.
-                     * offset = 12872, j = 14, Transmit match token No.14,(12872 13312]
-                     * offset = 12172, j = 13, Transmit match token No.13,(12172 12872]
-                     * offset = 11472, j = 12, Transmit match token No.13,(11472 12172]
-                     * ...
-                     * */
-                    backward_offset -= s->sums[j-1].len;
-                    /*offset cut a block length 12872,12172,11472,10772*/
-                    k = (int32)MIN((OFF_T)s->blength, (backward_offset + k)-forward_offset);
-                    map = (schar *)map_ptr(buf, backward_offset, k);
-                    /* map = (offset,offset+K]
-                     * offset = 12172, k = 700 (12172,12872]
-                     * offset = 11472, k = 700 (11472,12172]
-                     * offset = 10772, k = 700 (10772,11472]
-                     * */
-                    sum = get_checksum1((char *)map, k);
-                    s1 = sum & 0xFFFF;
-                    s2 = sum >> 16;
-                    matches++;
+                    }while((j = s->sums[j].chain) >= 0);
+                    // deal with the hash collision
                 }
 
             } else {
@@ -488,54 +502,60 @@ static void  hash_search(int f,struct sum_struct *s,
                     hash_hits++;
                     /*hash hit into the loop, unless nullhash:*/
 
-                    int32 l;
+                    do{
 
-                    if (sum != s->sums[j].sum1)
-                        /* 32bit rolling checksum mis match*/
+                        int32 l;
+
+                        if (sum != s->sums[j].sum1)
+                            /* 32bit rolling checksum mis match*/
+                            continue;
+
+                        /* also make sure the two blocks are the same length */
+                        l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k)-forward_offset);
+                        if (l != s->sums[j].len)
+                            continue;
+
+                        if (DEBUG_GTE(DELTASUM, 3)) {
+                            rprintf(FINFO,
+                                    "potential match at %s i=%ld sum=%08x\n",
+                                    big_num(backward_offset), (long)j, sum);
+                        }
+
+                        if (!done_csum2) {
+                            get_checksum2((char *)map,l,sum2);
+                            done_csum2 = 1;
+                        }
+
+                        if (memcmp(sum2,s->sums[j].sum2,s->s2length) != 0) {
+                            /* 128bit checksum mis match*/
+                            false_alarms++;
+                            continue;
+                        }
+
+                        backwardMatched(f,s,buf,backward_offset, j);
+                        /*Transmit a literal and/or match token.
+                         * offset = 12872, j = 14, Transmit match token No.14,(12872 13312]
+                         * offset = 12172, j = 13, Transmit match token No.13,(12172 12872]
+                         * offset = 11472, j = 12, Transmit match token No.13,(11472 12172]
+                         * ...
+                         * */
+                        backward_offset -= s->sums[j-1].len;
+                        /*offset cut a block length 12872,12172,11472,10772*/
+                        k = (int32)MIN((OFF_T)s->blength, (backward_offset + k)-forward_offset);
+                        map = (schar *)map_ptr(buf, backward_offset, k);
+                        /* map = (offset,offset+K]
+                         * offset = 12172, k = 700 (12172,12872]
+                         * offset = 11472, k = 700 (11472,12172]
+                         * offset = 10772, k = 700 (10772,11472]
+                         * */
+                        sum = get_checksum1((char *)map, k);
+                        s1 = sum & 0xFFFF;
+                        s2 = sum >> 16;
+                        matches++;
                         break;
 
-                    /* also make sure the two blocks are the same length */
-                    l = (int32)MIN((OFF_T)s->sums[j].len, (backward_offset + k)-forward_offset);
-                    if (l != s->sums[j].len)
-                        break;
-
-                    if (DEBUG_GTE(DELTASUM, 3)) {
-                        rprintf(FINFO,
-                                "potential match at %s i=%ld sum=%08x\n",
-                                big_num(backward_offset), (long)j, sum);
-                    }
-
-                    if (!done_csum2) {
-                        get_checksum2((char *)map,l,sum2);
-                        done_csum2 = 1;
-                    }
-
-                    if (memcmp(sum2,s->sums[j].sum2,s->s2length) != 0) {
-                        /* 128bit checksum mis match*/
-                        false_alarms++;
-                        break;
-                    }
-
-                    backwardMatched(f,s,buf,backward_offset, j);
-                    /*Transmit a literal and/or match token.
-                     * offset = 12872, j = 14, Transmit match token No.14,(12872 13312]
-                     * offset = 12172, j = 13, Transmit match token No.13,(12172 12872]
-                     * offset = 11472, j = 12, Transmit match token No.13,(11472 12172]
-                     * ...
-                     * */
-                    backward_offset -= s->sums[j-1].len;
-                    /*offset cut a block length 12872,12172,11472,10772*/
-                    k = (int32)MIN((OFF_T)s->blength, (backward_offset + k)-forward_offset);
-                    map = (schar *)map_ptr(buf, backward_offset, k);
-                    /* map = (offset,offset+K]
-                     * offset = 12172, k = 700 (12172,12872]
-                     * offset = 11472, k = 700 (11472,12172]
-                     * offset = 10772, k = 700 (10772,11472]
-                     * */
-                    sum = get_checksum1((char *)map, k);
-                    s1 = sum & 0xFFFF;
-                    s2 = sum >> 16;
-                    matches++;
+                    }while((j = s->sums[j].chain) >= 0);
+                    // deal with the hash collision
                 }
             }
         } while (backward_offset >= backward_end);

@@ -32,7 +32,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="57270fab-91c6-4025-b631-399f6f8b563f" name="Default" comment="" />
+    <list default="true" id="57270fab-91c6-4025-b631-399f6f8b563f" name="Default" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/match.c" beforeDir="false" afterPath="$PROJECT_DIR$/match.c" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -53,7 +56,7 @@
       <file leaf-file-name="checksum.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/checksum.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-3">
+            <state relative-caret-position="7416">
               <caret line="309" column="18" selection-start-line="309" selection-start-column="18" selection-end-line="309" selection-end-column="18" />
             </state>
           </provider>
@@ -62,7 +65,7 @@
       <file leaf-file-name="rsync.h" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/rsync.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="189">
+            <state relative-caret-position="3288">
               <caret line="137" column="8" selection-start-line="137" selection-start-column="8" selection-end-line="137" selection-end-column="8" />
               <folding>
                 <element signature="e#16320#16350#0" expanded="true" />
@@ -92,11 +95,10 @@
       <file leaf-file-name="match.c" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/match.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="366">
-              <caret line="242" column="28" selection-start-line="242" selection-start-column="28" selection-end-line="242" selection-end-column="28" />
+            <state relative-caret-position="507">
+              <caret line="557" column="51" selection-start-line="557" selection-start-column="51" selection-end-line="557" selection-end-column="51" />
               <folding>
                 <element signature="e#824#842#0" expanded="true" />
-                <element signature="e#22479#22547#0" />
               </folding>
             </state>
           </provider>
@@ -105,7 +107,7 @@
       <file leaf-file-name="token.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/token.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="381">
+            <state relative-caret-position="15336">
               <caret line="639" selection-start-line="639" selection-end-line="639" />
             </state>
           </provider>
@@ -114,7 +116,7 @@
       <file leaf-file-name="fileio.c" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/fileio.c">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-531">
+            <state relative-caret-position="5568">
               <caret line="232" column="31" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="31" />
             </state>
           </provider>
@@ -188,9 +190,9 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="editor.preferences.import" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../rsync-0.1" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.import" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -226,25 +228,25 @@
       <workItem from="1522053522286" duration="4340000" />
       <workItem from="1522116122843" duration="11713000" />
       <workItem from="1552354484788" duration="4763000" />
-      <workItem from="1552878286134" duration="63760000" />
+      <workItem from="1552878286134" duration="63858000" />
+      <workItem from="1554254447201" duration="954000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="84802000" />
+    <option name="totallyTimeSpent" value="85854000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.4978355" visible="true" weight="0.24427083" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49720672" visible="true" weight="0.2439282" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="CMake" order="7" weight="0.20476706" />
       <window_info anchor="bottom" id="Event Log" order="7" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Find" order="1" visible="true" weight="0.24918744" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info id="Structure" order="1" sideWeight="0.5021645" side_tool="true" visible="true" weight="0.24427083" />
+      <window_info id="Structure" order="1" sideWeight="0.5027933" side_tool="true" visible="true" weight="0.2439282" />
       <window_info anchor="bottom" id="Terminal" order="7" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
@@ -254,10 +256,11 @@
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" id="Data View" order="3" />
       <window_info anchor="right" id="LuaJ" order="3" />
-      <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="TeamCity" order="7" />
-      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Messages" order="7" weight="0.32936078" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info active="true" anchor="bottom" id="Find" order="1" visible="true" weight="0.24918744" />
     </layout>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -272,6 +275,61 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/checksum.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="7416">
+          <caret line="309" column="18" selection-start-line="309" selection-start-column="18" selection-end-line="309" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/rsync.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3288">
+          <caret line="137" column="8" selection-start-line="137" selection-start-column="8" selection-end-line="137" selection-end-column="8" />
+          <folding>
+            <element signature="e#16320#16350#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="96">
+          <caret line="4" column="6" selection-start-line="4" selection-start-column="6" selection-end-line="4" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Makefile">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="12" column="22" selection-start-line="12" selection-start-column="22" selection-end-line="12" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/token.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15336">
+          <caret line="639" selection-start-line="639" selection-end-line="639" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/fileio.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5568">
+          <caret line="232" column="31" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/match.c">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5808">
+          <caret line="242" column="28" selection-start-line="242" selection-start-column="28" selection-end-line="242" selection-end-column="28" />
+          <folding>
+            <element signature="e#824#842#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/checksum.c">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="864">
@@ -316,7 +374,6 @@
           <caret line="140" column="12" selection-start-line="140" selection-start-column="12" selection-end-line="140" selection-end-column="12" />
           <folding>
             <element signature="e#824#842#0" expanded="true" />
-            <element signature="e#22479#22547#0" />
           </folding>
         </state>
       </provider>
@@ -522,14 +579,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/fileio.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-531">
+        <state relative-caret-position="5568">
           <caret line="232" column="31" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="31" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/rsync.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
+        <state relative-caret-position="3288">
           <caret line="137" column="8" selection-start-line="137" selection-start-column="8" selection-end-line="137" selection-end-column="8" />
           <folding>
             <element signature="e#16320#16350#0" expanded="true" />
@@ -539,14 +596,14 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/checksum.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-3">
+        <state relative-caret-position="7416">
           <caret line="309" column="18" selection-start-line="309" selection-start-column="18" selection-end-line="309" selection-end-column="18" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/token.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="381">
+        <state relative-caret-position="15336">
           <caret line="639" selection-start-line="639" selection-end-line="639" />
         </state>
       </provider>
@@ -567,11 +624,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/match.c">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="366">
-          <caret line="242" column="28" selection-start-line="242" selection-start-column="28" selection-end-line="242" selection-end-column="28" />
+        <state relative-caret-position="507">
+          <caret line="557" column="51" selection-start-line="557" selection-start-column="51" selection-end-line="557" selection-end-column="51" />
           <folding>
             <element signature="e#824#842#0" expanded="true" />
-            <element signature="e#22479#22547#0" />
           </folding>
         </state>
       </provider>
