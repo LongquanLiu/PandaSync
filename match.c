@@ -383,7 +383,11 @@ static void  hash_search(int f,struct sum_struct *s,
      * */
     if(forward_enough == 0){
 
-        k = (int32)MIN(len-forward_offset, (OFF_T)s->remainder); /* k = 440 */
+        if((OFF_T)s->remainder == 0){
+            k = (int32)MIN(len-forward_offset, (OFF_T)s->blength);
+        }else{
+            k = (int32)MIN(len-forward_offset, (OFF_T)s->remainder); /* k = 440 */
+        }
 
         backward_offset = len - k;        /*12872*/
 
