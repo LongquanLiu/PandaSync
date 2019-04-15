@@ -197,7 +197,7 @@ static void  hash_search(int f,struct sum_struct *s,
 	char sum2[SUM_LENGTH];
 	uint32 s1, s2, sum;
 	schar *map;
-
+    int needBreak;
 
 	if (DEBUG_GTE(DELTASUM, 2)) {
 		rprintf(FINFO, "hash search b=%ld len=%s\n",
@@ -240,6 +240,7 @@ static void  hash_search(int f,struct sum_struct *s,
 		uint32 hash_entry;
 		int32 i;
 
+
 		if (DEBUG_GTE(DELTASUM, 4)) {
 			rprintf(FINFO, "offset=%s sum=%04x%04x\n",
 				big_num(forward_offset), s2 & 0xFFFF, s1 & 0xFFFF);
@@ -261,6 +262,7 @@ static void  hash_search(int f,struct sum_struct *s,
                 /*hash hit into the loop, unless nullhash:*/
 
                 do {
+                    needBreak = 1;
                     int32 l;
 
                     if (sum != s->sums[i].sum1)
@@ -306,9 +308,14 @@ static void  hash_search(int f,struct sum_struct *s,
                     s1 = sum & 0xFFFF;
                     s2 = sum >> 16;
                     matches++;
+                    needBreak = 0;
                     break;
                 }while((i = s->sums[i].chain) >= 0);
                 // deal with the hash-table collision
+			    if(needBreak == 1){
+			        // consider hash-table collision and at last mismatch
+                    break;
+			    }
 			}
 
 		} else {
@@ -323,6 +330,7 @@ static void  hash_search(int f,struct sum_struct *s,
                 /*hash hit into the loop, unless nullhash:*/
 
                 do {
+                    needBreak = 1;
                     int32 l;
 
                     if (sum != s->sums[i].sum1)
@@ -368,10 +376,15 @@ static void  hash_search(int f,struct sum_struct *s,
                     s1 = sum & 0xFFFF;
                     s2 = sum >> 16;
                     matches++;
+                    needBreak = 0;
                     break;
                 }while((i = s->sums[i].chain) >= 0);
                 // deal with the hash-table collision
-            }
+                if(needBreak == 1){
+                    // consider hash-table collision and at last mismatch
+                    break;
+                }
+			}
 		}
 	} while (++forward_offset < forward_end);
 	/* offset is range from 0~end-1(new file len-lastblock_length) */
@@ -440,7 +453,7 @@ static void  hash_search(int f,struct sum_struct *s,
                     /*hash hit into the loop, unless nullhash:*/
 
                     do{
-
+                        needBreak = 1;
                         int32 l;
 
                         if (sum != s->sums[j].sum1)
@@ -489,10 +502,14 @@ static void  hash_search(int f,struct sum_struct *s,
                         s1 = sum & 0xFFFF;
                         s2 = sum >> 16;
                         matches++;
+                        needBreak = 0;
                         break;
 
                     }while((j = s->sums[j].chain) >= 0);
                     // deal with the hash collision
+                    if(needBreak == 1){
+                        break;
+                    }
                 }
 
             } else {
@@ -507,7 +524,7 @@ static void  hash_search(int f,struct sum_struct *s,
                     /*hash hit into the loop, unless nullhash:*/
 
                     do{
-
+                        needBreak = 1;
                         int32 l;
 
                         if (sum != s->sums[j].sum1)
@@ -556,10 +573,14 @@ static void  hash_search(int f,struct sum_struct *s,
                         s1 = sum & 0xFFFF;
                         s2 = sum >> 16;
                         matches++;
+                        needBreak = 0;
                         break;
 
                     }while((j = s->sums[j].chain) >= 0);
                     // deal with the hash collision
+                    if(needBreak == 1){
+                        break;
+                    }
                 }
             }
         } while (backward_offset >= backward_end);
