@@ -546,6 +546,7 @@ static void handle_kill_signal(BOOL flush_ok)
  * unused raw data in the buf would prevent the reading of socket data. */
 static char *perform_io(size_t needed, int flags)
 {
+	// Perform input and output operations on the buffer until the conditions are met (when the input ‘read’ byte or output ‘write’ space is available)
 	fd_set r_fds, e_fds, w_fds;
 	struct timeval tv;
 	int cnt, max_fd;
@@ -1087,6 +1088,7 @@ void set_io_timeout(int secs)
 	if (read_batch)
 		allowed_lull = 0;
 }
+
 
 static void check_for_d_option_error(const char *msg)
 {
@@ -2062,6 +2064,7 @@ void write_varlong(int f, int64 x, uchar min_bytes)
 
 	write_buf(f, b, cnt);
 }
+
 
 /*
  * Note: int64 may actually be a 32-bit type if ./configure couldn't find any

@@ -33,7 +33,6 @@ static int false_alarms;
 static int hash_hits;
 static int matches;
 static int64 data_transfer;
-
 static int total_false_alarms;
 static int total_hash_hits;
 static int total_matches;
@@ -88,9 +87,7 @@ static void build_hash_table(struct sum_struct *s)
 	}
 }
 
-
 static OFF_T last_match;
-
 
 /* Transmit a literal and/or match token.
  *
@@ -106,6 +103,7 @@ static OFF_T last_match;
 static void matched(int f, struct sum_struct *s, struct map_struct *buf,
 		    OFF_T offset, int32 i)
 {
+	// Transmit literal and/or match token
 	int32 n = (int32)(offset - last_match); /* max value: block_size (int32) */
 	int32 j;
 
@@ -373,7 +371,6 @@ void match_sums(int f, struct sum_struct *s, struct map_struct *buf, OFF_T len)
 
 		// Scan the original file to find the part that matches the checksum in the server (sent by the generator) And transmit literal data (Unmatch) or token (match mark) data.
 		matched(f, s, buf, len, -1);
-
 		sum_len = sum_end(sender_file_sum);
 
 		/* If we had a read error, send a bad checksum.  We use all bits
@@ -404,7 +401,6 @@ void match_sums(int f, struct sum_struct *s, struct map_struct *buf, OFF_T len)
 	}else{
 		// @param s is the checksum received from generate. If <tt> s-> count == 0 </ tt>, then in fact this file has no checksum. @param len The length of the file to be sent.
 		int sum_len;
-
 		last_match = 0;
 		false_alarms = 0;
 		hash_hits = 0;

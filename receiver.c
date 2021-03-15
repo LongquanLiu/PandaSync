@@ -552,6 +552,7 @@ int recv_files(int f_in, int f_out, char *local_name)
 		cleanup_disable();
 
 		/* This call also sets cur_flist. */
+		// The send side reads file attributes and index information
 		ndx = read_ndx_and_attrs(f_in, f_out, &iflags, &fnamecmp_type,
 					 xname, &xlen);
 		if (ndx == NDX_DONE) {
@@ -753,6 +754,7 @@ int recv_files(int f_in, int f_out, char *local_name)
 				fnamecmp = fname;
 		}
 
+
 		/* open the file */
 		fd1 = do_open(fnamecmp, O_RDONLY, 0);
 
@@ -845,6 +847,7 @@ int recv_files(int f_in, int f_out, char *local_name)
 				send_msg_int(MSG_NO_SEND, ndx);
 			continue;
 		}
+
 
 		/* log the transfer */
 		if (log_before_transfer)
