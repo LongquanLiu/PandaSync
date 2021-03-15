@@ -522,6 +522,7 @@ int gen_wants_ndx(int desired_ndx, int flist_num)
  * Receiver process runs on the same host as the generator process. */
 int recv_files(int f_in, int f_out, char *local_name)
 {
+	// The main process of the receive side, which runs on the same host as the generate process
 	int fd1,fd2;
 	STRUCT_STAT st;
 	int iflags, xlen;

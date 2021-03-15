@@ -63,6 +63,7 @@ BOOL extra_flist_sending_enabled;
  **/
 static struct sum_struct *receive_sums(int f)
 {
+	// Receive the checksum sent to the buffer by the generate end. The return value s is the checksum collection
 	struct sum_struct *s;
 	int32 i;
 	int lull_mod = protocol_version >= 31 ? 0 : allowed_lull * 5;
@@ -188,7 +189,7 @@ static void write_ndx_and_attrs(int f_out, int ndx, int iflags,
 
 void send_files(int f_in, int f_out)
 {
-
+		// The sender receives the old file checksum list sent by generate, calculates the matched and unmatched file data, and sends it to the receiver (write buffer)
 		int fd = -1;
 		struct sum_struct *s;
 		struct map_struct *mbuf = NULL;
@@ -436,4 +437,3 @@ void send_files(int f_in, int f_out)
 
 		write_ndx(f_out, NDX_DONE);
 }
-

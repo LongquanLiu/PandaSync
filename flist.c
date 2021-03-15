@@ -1433,6 +1433,7 @@ static struct file_struct *send_file_name(int f, struct file_list *flist,
 					  const char *fname, STRUCT_STAT *stp,
 					  int flags, int filter_level)
 {
+	// Write the file name, status and other data to the buff area
 	struct file_struct *file;
 
 	file = make_file(fname, flist, stp, flags, filter_level);
@@ -2080,8 +2081,9 @@ void send_extra_file_list(int f, int at_least)
 
 struct file_list *send_file_list(int f, int argc, char *argv[])
 {
+	// basic file list gather for sync file and trasfer
 	static const char *lastdir;
-	// the memory unit of this lastdir point can't be change 
+	// the memory unit of this lastdir point can't be change
 	static int lastdir_len = -1;
 	int len, dirlen;
 	STRUCT_STAT st;
@@ -2102,7 +2104,7 @@ struct file_list *send_file_list(int f, int argc, char *argv[])
 	int implied_dot_dir = 0;
 
 	rprintf(FLOG, "building file list\n");
-	if (show_filelist_progress) 
+	if (show_filelist_progress)
 		//xfer_dirs != 1
 		start_filelist_progress("building file list");
 	else if (inc_recurse && INFO_GTE(FLIST, 1) && !am_server)
@@ -2383,7 +2385,7 @@ struct file_list *send_file_list(int f, int argc, char *argv[])
 
 	if (show_filelist_progress)
 		finish_filelist_progress(flist);
-	
+
 
 	gettimeofday(&end_tv, NULL);
 	stats.flist_xfertime = (int64)(end_tv.tv_sec - start_tv.tv_sec) * 1000

@@ -371,7 +371,7 @@ void match_sums(int f, struct sum_struct *s, struct map_struct *buf, OFF_T len)
 		matches = 0;
 		data_transfer = 0;
 
-
+		// Scan the original file to find the part that matches the checksum in the server (sent by the generator) And transmit literal data (Unmatch) or token (match mark) data.
 		matched(f, s, buf, len, -1);
 
 		sum_len = sum_end(sender_file_sum);
@@ -402,6 +402,7 @@ void match_sums(int f, struct sum_struct *s, struct map_struct *buf, OFF_T len)
 		stats.literal_data += data_transfer;
 
 	}else{
+		// @param s is the checksum received from generate. If <tt> s-> count == 0 </ tt>, then in fact this file has no checksum. @param len The length of the file to be sent.
 		int sum_len;
 
 		last_match = 0;

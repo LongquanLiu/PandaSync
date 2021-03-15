@@ -126,10 +126,7 @@ struct pid_status {
 
 
 static int64 total_read, total_written;
-static time_t starttime, endtime; 
-
-
-
+static time_t starttime, endtime;
 
 static void show_malloc_stats(void);
 
@@ -359,7 +356,7 @@ static void output_summary(void)
 			human_num(stats.total_size),
 			comma_dnum((double)stats.total_size / (total_written+total_read), 2),
 			write_batch < 0 ? " (BATCH ONLY)" : dry_run ? " (DRY RUN)" : "");
-		
+
 	}
 
 	fflush(stdout);
@@ -1197,8 +1194,8 @@ int client_run(int f_in, int f_out, pid_t pid, int argc, char *argv[])
 
 	io_set_sock_fds(f_in, f_out);
 	setup_protocol(f_out,f_in);
-	
-	
+
+
 	/* We set our stderr file handle to blocking because ssh might have
 	 * set it to non-blocking.  This can be particularly troublesome if
 	 * stderr is a clone of stdout, because ssh would have set our stdout
@@ -1391,7 +1388,7 @@ static int start_client(int argc, char *argv[])
 	 * command line. */
 	if ((ret = copy_argv(argv)) != 0)
 		return ret;
-	
+
 	if (!read_batch) { /* for read_batch, NO source is specified */
 		char *path = check_for_hostspec(argv[0], &shell_machine, &rsync_port);
 		if (path) { /* source is remote */
@@ -1549,12 +1546,12 @@ static int start_client(int argc, char *argv[])
 		if (tmpret < 0)
 			return tmpret;
 	}
-	
+
 	ret = client_run(f_in, f_out, pid, argc, argv);
-	
+
 	fflush(stdout);
 	fflush(stderr);
-	
+
 	return ret;
 }
 
@@ -1653,8 +1650,8 @@ static void rsync_panic_handler(UNUSED(int whatsig))
 
 int main(int argc,char *argv[])
 {
-	printf( "Now start : init start time \n"); 
-	/* 测量一个事件持续的时间*/ 
+	printf( "Now start : init start time \n");
+	/* 测量一个事件持续的时间*/
 	gettimeofday(&start, NULL);
 //	start1 = clock();
 
@@ -1678,9 +1675,9 @@ int main(int argc,char *argv[])
 	SIGACTMASK(SIGABRT, rsync_panic_handler);
 	SIGACTMASK(SIGBUS, rsync_panic_handler);
 #endif
-	 
 
-	
+
+
 	our_uid = MY_UID();
 	our_gid = MY_GID();
 	am_root = our_uid == 0;
@@ -1780,14 +1777,14 @@ int main(int argc,char *argv[])
 			return start_daemon(STDIN_FILENO, STDOUT_FILENO);
 		start_server(STDIN_FILENO, STDOUT_FILENO, argc, argv);
 	}
-	
+
 	ret = start_client(argc, argv);
-	
+
 	if (ret == -1)
 		exit_cleanup(RERR_STARTCLIENT);
 	else
 		exit_cleanup(ret);
-	
+
 	return ret;
-	 
+
 }
